@@ -172,6 +172,24 @@ function saveData() {
   localStorage.setItem(STORAGE_KEYS.INVESTMENTS, JSON.stringify(state.investments));
   localStorage.setItem(STORAGE_KEYS.BUDGETS, JSON.stringify(state.budgetLimits));
   updateLastUpdated();
+  // Auto-sync to cloud (debounced 30s)
+  scheduleAutoSync();
+}
+
+// ─── Auto Cloud Sync (debounced) ───
+let _autoSyncTimer = null;
+function scheduleAutoSync() {
+  const token = localStorage.getItem('ft_gh_token');
+  const gistId = localStorage.getItem('ft_gistId');
+  if (!token || !gistId) return; // only auto-sync if already configured
+  clearTimeout(_autoSyncTimer);
+  _autoSyncTimer = setTimeout(() => {
+    cloudBackup().then(() => {
+      console.log('Auto-sync completed');
+    }).catch(err => {
+      console.warn('Auto-sync failed:', err);
+    });
+  }, 30000); // 30 seconds debounce
 }
 
 function updateLastUpdated() {
@@ -2866,11 +2884,16 @@ function initCloudSync() {
   const savedToken = getGHToken();
   if (tokenInput && savedToken) tokenInput.value = savedToken;
 
-  // Save token on change
+  // Save token on change — trigger first backup
   if (tokenInput) {
     tokenInput.addEventListener('change', () => {
-      localStorage.setItem('ft_gh_token', tokenInput.value.trim());
+      const token = tokenInput.value.trim();
+      localStorage.setItem('ft_gh_token', token);
       showToast('Token sauvegardé', 'success');
+      // First backup if no gist yet
+      if (token && !localStorage.getItem('ft_gistId')) {
+        cloudBackup();
+      }
     });
   }
 
@@ -2882,6 +2905,15 @@ function initCloudSync() {
   const statusEl = document.getElementById('cloudSyncStatus');
   if (statusEl && lastSync) {
     statusEl.textContent = `Dernière sync: ${new Date(lastSync).toLocaleString('fr-FR')}`;
+  }
+
+  // Auto-restore on fresh device: if no local data but cloud exists
+  const token = getGHToken();
+  const gistId = localStorage.getItem('ft_gistId');
+  const hasLocalData = state.weeklyData.length > 0 || state.accountData.length > 0;
+  if (token && gistId && !hasLocalData) {
+    showToast('☁️ Restauration depuis le cloud...', 'info');
+    cloudRestore();
   }
 }
 
