@@ -2876,29 +2876,42 @@ function renderMobileWidget() {
 const GIST_DESCRIPTION = 'Finance Tracker — Cloud Backup';
 
 function getGHToken() {
+  // Always check the input field first (in case not yet saved)
+  const input = document.getElementById('ghTokenInput');
+  if (input && input.value.trim()) {
+    const token = input.value.trim();
+    localStorage.setItem('ft_gh_token', token);
+    return token;
+  }
   return localStorage.getItem('ft_gh_token') || '';
 }
 
 function initCloudSync() {
   const tokenInput = document.getElementById('ghTokenInput');
-  const savedToken = getGHToken();
+  const savedToken = localStorage.getItem('ft_gh_token') || '';
   if (tokenInput && savedToken) tokenInput.value = savedToken;
 
-  // Save token on change — trigger first backup
+  // Save token on any interaction
   if (tokenInput) {
-    tokenInput.addEventListener('change', () => {
+    const saveToken = () => {
       const token = tokenInput.value.trim();
-      localStorage.setItem('ft_gh_token', token);
-      showToast('Token sauvegardé', 'success');
-      // First backup if no gist yet
-      if (token && !localStorage.getItem('ft_gistId')) {
-        cloudBackup();
-      }
-    });
+      if (token) localStorage.setItem('ft_gh_token', token);
+    };
+    tokenInput.addEventListener('change', saveToken);
+    tokenInput.addEventListener('blur', saveToken);
+    tokenInput.addEventListener('input', debounce(saveToken, 500));
   }
 
-  document.getElementById('cloudBackupBtn')?.addEventListener('click', cloudBackup);
-  document.getElementById('cloudRestoreBtn')?.addEventListener('click', cloudRestore);
+  document.getElementById('cloudBackupBtn')?.addEventListener('click', () => {
+    const token = getGHToken();
+    if (!token) { showToast('Collez votre token GitHub d\'abord', 'error'); return; }
+    cloudBackup();
+  });
+  document.getElementById('cloudRestoreBtn')?.addEventListener('click', () => {
+    const token = getGHToken();
+    if (!token) { showToast('Collez votre token GitHub d\'abord', 'error'); return; }
+    cloudRestore();
+  });
 
   // Show last sync date
   const lastSync = localStorage.getItem('ft_lastSync');
