@@ -1,0 +1,19 @@
+{
+  "name": "Finance Tracker",
+  "short_name": "Finance",
+  "description": "Tableau de bord financier personnel — Suivi des investissements, comptes et patrimoine",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#191919",
+  "theme_color": "#2eaadc",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "productivity"]
+}

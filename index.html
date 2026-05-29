@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Tableau de bord financier personnel - Suivi des investissements, comptes et patrimoine">
+  <title>Finance Tracker — Tableau de Bord</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-sankey@0.12.3/dist/chartjs-chart-sankey.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="style.css?v=20260530">
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2eaadc">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icon-512.png">
+</head>
+<body>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <span class="logo-icon"><i data-lucide="wallet"></i></span>
+        <span class="logo-text">Finance Tracker</span>
+      </div>
+      <button class="sidebar-toggle" id="sidebarToggle" title="Réduire">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v1.5H2V3zm0 4.25h12v1.5H2v-1.5zm0 4.25h12V13H2v-1.5z"/></svg>
+      </button>
+    </div>
+
+    <div class="sidebar-search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" placeholder="Rechercher..." id="searchInput">
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-title">PRINCIPAL</div>
+        <button class="nav-item active" data-view="dashboard" id="nav-dashboard">
+          <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span>
+          <span class="nav-text">Tableau de bord</span>
+        </button>
+        <button class="nav-item" data-view="table" id="nav-table">
+          <span class="nav-icon"><i data-lucide="file-spreadsheet"></i></span>
+          <span class="nav-text">Données financières</span>
+        </button>
+        <button class="nav-item" data-view="accounts" id="nav-accounts">
+          <span class="nav-icon"><i data-lucide="landmark"></i></span>
+          <span class="nav-text">Comptes & Épargne</span>
+        </button>
+        <button class="nav-item" data-view="analytics" id="nav-analytics">
+          <span class="nav-icon"><i data-lucide="pie-chart"></i></span>
+          <span class="nav-text">Analyses & Bilans</span>
+        </button>
+        <button class="nav-item" data-view="projections" id="nav-projections">
+          <span class="nav-icon"><i data-lucide="line-chart"></i></span>
+          <span class="nav-text">Projections</span>
+        </button>
+        <button class="nav-item" data-view="goals" id="nav-goals">
+          <span class="nav-icon"><i data-lucide="target"></i></span>
+          <span class="nav-text">Objectifs</span>
+        </button>
+        <button class="nav-item" data-view="simulation" id="nav-simulation">
+          <span class="nav-icon"><i data-lucide="atom"></i></span>
+          <span class="nav-text">Simulation Monte-Carlo</span>
+        </button>
+      </div>
+
+      <div class="nav-section">
+        <div class="nav-section-title">OUTILS</div>
+        <button class="nav-item" data-view="import" id="nav-import">
+          <span class="nav-icon"><i data-lucide="download"></i></span>
+          <span class="nav-text">Import / Export</span>
+        </button>
+        <button class="nav-item" id="nav-settings" data-view="settings">
+          <span class="nav-icon"><i data-lucide="settings"></i></span>
+          <span class="nav-text">Paramètres</span>
+        </button>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="theme-toggle" id="themeToggle" title="Basculer le thème">
+        <span class="theme-icon"><i data-lucide="moon"></i></span>
+        <span class="nav-text">Mode sombre</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main-content" id="mainContent">
+    <!-- Top bar -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="mobile-menu-btn" id="mobileMenuBtn">
+          <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor"><path d="M2 3h12v1.5H2V3zm0 4.25h12v1.5H2v-1.5zm0 4.25h12V13H2v-1.5z"/></svg>
+        </button>
+        <div class="breadcrumb" id="breadcrumb" style="display:flex; align-items:center; gap:8px;">
+          <span class="breadcrumb-icon"><i data-lucide="layout-dashboard" style="width: 18px; height: 18px;"></i></span>
+          <span class="breadcrumb-text">Tableau de bord</span>
+        </div>
+      </div>
+      <div class="topbar-right" style="display:flex; align-items:center; gap:12px;">
+        <button class="icon-btn" id="alertBellBtn" title="Alertes" style="position:relative; background:none; border:none; cursor:pointer; color:var(--text-secondary); padding:4px;">
+          <i data-lucide="bell" style="width:20px; height:20px;"></i>
+          <span class="alert-badge" id="alertBadge" style="display:none; position:absolute; top:-2px; right:-2px; background:var(--danger); color:#fff; border-radius:50%; width:16px; height:16px; font-size:10px; font-weight:700; line-height:16px; text-align:center;">0</span>
+        </button>
+        <span class="last-updated" id="lastUpdated">Dernière MAJ: --</span>
+      </div>
+    </header>
+
+    <!-- ==================== DASHBOARD VIEW ==================== -->
+    <section class="view active" id="view-dashboard">
+      <!-- Summary Cards -->
+      <div class="summary-cards" id="summaryCards">
+        <div class="card summary-card">
+          <div class="card-label" style="display:flex; align-items:center; gap:6px;"><i data-lucide="briefcase" style="width: 16px; height: 16px;"></i> Patrimoine Net</div>
+          <div class="card-value" id="cardNetWorth">--</div>
+          <div class="card-change positive" id="cardNetWorthChange">--</div>
+        </div>
+        <div class="card summary-card">
+          <div class="card-label" style="display:flex; align-items:center; gap:6px;"><i data-lucide="piggy-bank" style="width: 16px; height: 16px;"></i> Épargne Totale</div>
+          <div class="card-value" id="cardSavings">--</div>
+          <div class="card-change positive" id="cardSavingsChange">--</div>
+        </div>
+        <div class="card summary-card">
+          <div class="card-label" style="display:flex; align-items:center; gap:6px;"><i data-lucide="trending-down" style="width: 16px; height: 16px;"></i> Dépenses Totales</div>
+          <div class="card-value" id="cardExpenses">--</div>
+          <div class="card-change negative" id="cardExpensesChange">--</div>
+        </div>
+        <div class="card summary-card">
+          <div class="card-label" style="display:flex; align-items:center; gap:6px;"><i data-lucide="scale" style="width: 16px; height: 16px;"></i> Reste Total</div>
+          <div class="card-value" id="cardReste">--</div>
+          <div class="card-change positive" id="cardResteChange">--</div>
+        </div>
+      </div>
+
+      <!-- Health Score + Mobile Widget -->
+      <div class="charts-row dual">
+        <div class="card chart-card health-score-card">
+          <div class="section-header">
+            <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="heart-pulse" style="width: 20px; height: 20px;"></i> Santé Financière</h2>
+          </div>
+          <div class="health-gauge-container" id="healthGaugeContainer">
+            <div class="health-gauge">
+              <svg viewBox="0 0 200 120" class="gauge-svg">
+                <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="var(--bg-tertiary)" stroke-width="14" stroke-linecap="round"/>
+                <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="url(#gaugeGrad)" stroke-width="14" stroke-linecap="round" id="gaugeArc" stroke-dasharray="251" stroke-dashoffset="251"/>
+                <defs><linearGradient id="gaugeGrad" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#e03e3e"/><stop offset="50%" stop-color="#cb912f"/><stop offset="100%" stop-color="#4daa57"/></linearGradient></defs>
+              </svg>
+              <div class="gauge-value" id="healthScoreValue">--</div>
+              <div class="gauge-label" id="healthScoreLabel">Calculer...</div>
+            </div>
+            <div class="health-breakdown" id="healthBreakdown"></div>
+          </div>
+        </div>
+        <div class="card chart-card mobile-widget-card">
+          <div class="section-header">
+            <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="smartphone" style="width: 20px; height: 20px;"></i> Résumé Rapide</h2>
+          </div>
+          <div class="widget-content" id="mobileWidget">
+            <p class="placeholder-text">Chargement...</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="charts-row">
+        <div class="card chart-card wide">
+          <div class="section-header">
+            <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="trending-up" style="width: 20px; height: 20px;"></i> Épargne & Dépenses Cumulatives</h2>
+            <div class="chart-controls">
+              <button class="chart-btn active" data-range="all">Tout</button>
+              <button class="chart-btn" data-range="12m">12M</button>
+              <button class="chart-btn" data-range="6m">6M</button>
+              <button class="chart-btn" data-range="3m">3M</button>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="netWorthChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="charts-row dual">
+        <div class="card chart-card">
+          <div class="section-header">
+            <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="bar-chart-2" style="width: 20px; height: 20px;"></i> Reste / Mois</h2>
+          </div>
+          <div class="chart-container small">
+            <canvas id="ttWeeklyChart"></canvas>
+          </div>
+        </div>
+        <div class="card chart-card">
+          <div class="section-header">
+            <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="bar-chart-horizontal" style="width: 20px; height: 20px;"></i> Répartition Dépenses / Mois</h2>
+          </div>
+          <div class="chart-container small">
+            <canvas id="vaWeeklyChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Savings Rate Chart -->
+      <div class="charts-row">
+        <div class="card chart-card wide">
+          <div class="section-header">
+            <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="percent" style="width: 20px; height: 20px;"></i> Taux d'Épargne dans le Temps</h2>
+          </div>
+          <div class="chart-container">
+            <canvas id="savingsRateChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== DATA TABLE VIEW ==================== -->
+    <section class="view" id="view-table">
+      <div class="view-header">
+        <h1 style="display:flex; align-items:center; gap:8px;"><i data-lucide="file-spreadsheet" style="width: 24px; height: 24px;"></i> Données Financières</h1>
+        <div class="view-actions">
+          <button class="btn btn-secondary" id="manageColumnsBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+            Gérer les colonnes
+          </button>
+          <button class="btn btn-secondary" id="addRowBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            Ajouter une ligne
+          </button>
+          <button class="btn btn-secondary" id="exportCsvBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Exporter CSV
+          </button>
+        </div>
+      </div>
+      
+      <div class="table-filters">
+        <input type="text" class="filter-input" placeholder="🔍 Filtrer les données..." id="tableFilter">
+        <select class="filter-select" id="periodFilter">
+          <option value="all">Toutes les périodes</option>
+          <option value="2024">2024</option>
+          <option value="2025">2025</option>
+        </select>
+      </div>
+
+      <div class="card section-card">
+        <div class="table-wrapper scrollable">
+          <table class="data-table editable" id="mainDataTable">
+            <thead id="mainTableHead">
+              <!-- Dynamically populated -->
+            </thead>
+            <tbody id="mainTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Budget Tracker -->
+      <div class="card section-card budget-tracker">
+        <div class="section-header">
+          <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="target" style="width: 20px; height: 20px;"></i> Suivi de Budget</h2>
+          <div class="view-actions">
+            <select class="filter-select" id="budgetMonthSelect">
+              <!-- Populated dynamically -->
+            </select>
+            <button class="btn btn-secondary" id="editBudgetLimitsBtn" style="display:flex; align-items:center; gap:6px;">
+              <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i> Définir les plafonds
+            </button>
+          </div>
+        </div>
+
+        <div class="budget-layout">
+          <!-- Donut Chart -->
+          <div class="budget-donut-wrap">
+            <div class="budget-donut-container">
+              <canvas id="budgetDonutChart"></canvas>
+            </div>
+            <div class="budget-donut-center" id="budgetDonutCenter">
+              <span class="budget-total-label">Dépensé</span>
+              <span class="budget-total-value" id="budgetTotalSpent">--</span>
+            </div>
+          </div>
+
+          <!-- Category Bars -->
+          <div class="budget-categories" id="budgetCategories">
+            <p class="placeholder-text">Sélectionnez un mois et définissez vos plafonds de budget.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== ACCOUNTS VIEW ==================== -->
+    <section class="view" id="view-accounts">
+      <div class="view-header">
+        <h1 style="display:flex; align-items:center; gap:8px;"><i data-lucide="landmark" style="width: 24px; height: 24px;"></i> Comptes & Épargne</h1>
+        <div class="view-actions">
+          <button class="btn btn-secondary" id="manageAccountColumnsBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+            Gérer les colonnes
+          </button>
+          <button class="btn btn-secondary" id="addAccountEntryBtn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            Ajouter une entrée
+          </button>
+          <button class="btn btn-secondary" id="exportAccountsCsvBtn" style="display:flex; align-items:center; gap:6px;">
+            <i data-lucide="download" style="width:14px; height:14px;"></i> Export CSV
+          </button>
+        </div>
+      </div>
+
+      <!-- Account Summary Cards -->
+      <div class="account-cards" id="accountCards"></div>
+
+      <div class="card section-card">
+        <div class="section-header">
+          <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="calendar" style="width: 20px; height: 20px;"></i> Historique des Soldes</h2>
+        </div>
+        <div class="table-wrapper scrollable">
+          <table class="data-table editable" id="accountsTable">
+            <thead id="accountsTableHead">
+              <!-- Dynamically populated -->
+            </thead>
+            <tbody id="accountsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <div class="card chart-card">
+          <div class="section-header">
+            <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="pie-chart" style="width: 20px; height: 20px;"></i> Répartition des Comptes</h2>
+          </div>
+          <div class="chart-container">
+            <canvas id="accountDistChart"></canvas>
+          </div>
+        </div>
+        <div class="card chart-card">
+          <div class="section-header">
+            <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="chart-pie" style="width: 20px; height: 20px;"></i> Allocation d'Actifs</h2>
+          </div>
+          <div class="chart-container" style="max-width:400px; margin:0 auto;">
+            <canvas id="allocationDonutChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="card section-card">
+        <div class="section-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="trending-up" style="width: 20px; height: 20px;"></i> Performances Boursières (ROI)</h2>
+          <button class="btn btn-secondary" id="editInvestmentsBtn" style="display:flex; align-items:center; gap:6px;">
+            <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i> Définir Capital Investi
+          </button>
+        </div>
+        <div class="account-cards" id="roiCards" style="margin-top: 15px;">
+          <!-- Populated by JS -->
+          <p class="placeholder-text">Cliquez sur "Définir Capital Investi" pour calculer vos plus-values.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== ANALYTICS VIEW ==================== -->
+    <section class="view" id="view-analytics">
+      <div class="view-header">
+        <h1 style="display:flex; align-items:center; gap:8px;"><i data-lucide="pie-chart" style="width: 24px; height: 24px;"></i> Analyses & Bilans</h1>
+        <div class="view-actions">
+          <select class="filter-select" id="analyticsYearSelect" style="font-weight:600; padding: 6px 12px; border-radius: 6px; background:var(--bg-card); color:var(--text-color); border:1px solid var(--border-color);">
+            <option value="all">Toutes les années</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Bilans Cards -->
+      <div class="summary-cards" id="analyticsCards">
+        <div class="card summary-card">
+          <div class="card-label" style="display:flex; align-items:center; gap:6px;"><i data-lucide="briefcase"></i> Total Revenus</div>
+          <div class="card-value" id="analyticTotalIn">--</div>
+        </div>
+        <div class="card summary-card">
+          <div class="card-label" style="display:flex; align-items:center; gap:6px;"><i data-lucide="trending-down"></i> Total Dépenses</div>
+          <div class="card-value" id="analyticTotalOut">--</div>
+        </div>
+        <div class="card summary-card">
+          <div class="card-label" style="display:flex; align-items:center; gap:6px;"><i data-lucide="piggy-bank"></i> Total Épargne</div>
+          <div class="card-value" id="analyticTotalSavings">--</div>
+        </div>
+        <div class="card summary-card">
+          <div class="card-label" style="display:flex; align-items:center; gap:6px;"><i data-lucide="percent"></i> Taux d'Épargne Moyen</div>
+          <div class="card-value" id="analyticSavingsRate">--</div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <!-- Sankey Flow Chart -->
+        <div class="card chart-card wide">
+          <div class="section-header">
+            <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="git-merge"></i> Flux Financiers Annuels</h2>
+          </div>
+          <div class="chart-container" style="min-height: 400px;">
+            <canvas id="sankeyChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="charts-row">
+        <!-- Monthly Breakdown Bar Chart -->
+        <div class="card chart-card wide">
+          <div class="section-header">
+            <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="bar-chart"></i> Bilan Mensuel</h2>
+          </div>
+          <div class="chart-container">
+            <canvas id="analyticsMonthlyChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Month Comparison -->
+      <div class="card section-card">
+        <div class="section-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+          <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="git-compare" style="width:20px; height:20px;"></i> Comparaison Mensuelle</h2>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <select id="compareMonth1" class="form-select" style="font-size:13px; padding:4px 8px;"></select>
+            <span style="color:var(--text-secondary); font-weight:500;">vs</span>
+            <select id="compareMonth2" class="form-select" style="font-size:13px; padding:4px 8px;"></select>
+            <button class="btn btn-primary" id="runComparisonBtn" style="font-size:13px; padding:5px 12px;">Comparer</button>
+          </div>
+        </div>
+        <div id="comparisonResult" style="margin-top:15px;">
+          <p class="placeholder-text">Sélectionnez deux mois et cliquez Comparer.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== PROJECTIONS VIEW ==================== -->
+    <section class="view" id="view-projections">
+      <div class="view-header">
+        <h1 style="display:flex; align-items:center; gap:8px;"><i data-lucide="line-chart" style="width: 24px; height: 24px;"></i> Projections</h1>
+      </div>
+
+      <div class="projection-controls card section-card">
+        <div class="section-header">
+          <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="settings" style="width: 20px; height: 20px;"></i> Paramètres de Projection</h2>
+        </div>
+        <div class="controls-grid">
+          <div class="control-group">
+            <label for="projYears">Horizon (années)</label>
+            <input type="number" id="projYears" value="5" min="1" max="30">
+          </div>
+          <div class="control-group">
+            <label for="projRate">Rendement annuel (%)</label>
+            <input type="number" id="projRate" value="7" min="0" max="50" step="0.5">
+          </div>
+          <div class="control-group">
+            <label for="projMonthly">Épargne mensuelle (€)</label>
+            <input type="number" id="projMonthly" value="500" min="0" step="50">
+          </div>
+          <div class="control-group">
+            <label for="projInitial">Capital initial (€)</label>
+            <input type="number" id="projInitial" value="50000" min="0" step="1000">
+          </div>
+          <button class="btn btn-primary" id="runProjection">Calculer la projection</button>
+        </div>
+      </div>
+
+      <div class="card chart-card wide">
+        <div class="section-header">
+          <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="trending-up" style="width: 20px; height: 20px;"></i> Croissance Projetée</h2>
+        </div>
+        <div class="chart-container large">
+          <canvas id="projectionChart"></canvas>
+        </div>
+      </div>
+
+      <div class="card section-card">
+        <div class="section-header">
+          <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="bar-chart" style="width: 20px; height: 20px;"></i> Résultats de la Projection</h2>
+        </div>
+        <div class="projection-results" id="projectionResults">
+          <p class="placeholder-text">Lancez une projection pour voir les résultats.</p>
+        </div>
+      </div>
+
+      <!-- Patrimony Estimation (data-driven) -->
+      <div class="card section-card patrimony-estimation">
+        <div class="section-header">
+          <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="gem" style="width: 20px; height: 20px;"></i> Estimation de Patrimoine</h2>
+          <div class="view-actions" style="display:flex; align-items:center; gap:10px;">
+            <label style="font-size:13px; color:var(--text-secondary); white-space:nowrap;">Départ :</label>
+            <select class="filter-select" id="patriStartSelect">
+              <!-- Populated dynamically -->
+            </select>
+            <button class="btn btn-primary" id="runPatrimonyEstimation" style="display:flex; align-items:center; gap:6px;">
+              <i data-lucide="calculator" style="width: 16px; height: 16px;"></i> Calculer
+            </button>
+          </div>
+        </div>
+        <p class="section-desc" style="color: var(--text-tertiary); font-size: 13px; margin-bottom: 16px;">
+          Estimation basée sur l'évolution réelle de vos comptes à partir du point de départ sélectionné.
+        </p>
+
+        <!-- KPI Cards -->
+        <div class="summary-cards patrimony-kpis" id="patrimonyKpis">
+          <div class="summary-card">
+            <div class="card-label">Patrimoine actuel</div>
+            <div class="card-value" id="patriCurrent">--</div>
+          </div>
+          <div class="summary-card">
+            <div class="card-label">Croissance mensuelle moy.</div>
+            <div class="card-value" id="patriMonthlyGrowth">--</div>
+          </div>
+          <div class="summary-card">
+            <div class="card-label">Taux de croissance annuel</div>
+            <div class="card-value" id="patriAnnualRate">--</div>
+          </div>
+          <div class="summary-card">
+            <div class="card-label">Épargne mensuelle moy.</div>
+            <div class="card-value" id="patriMonthlySavings">--</div>
+          </div>
+          <div class="summary-card">
+            <div class="card-label">Estimation à 1 an</div>
+            <div class="card-value" id="patriEst1Y">--</div>
+          </div>
+          <div class="summary-card">
+            <div class="card-label">Estimation à 5 ans</div>
+            <div class="card-value" id="patriEst5Y">--</div>
+          </div>
+        </div>
+
+        <!-- Main Chart -->
+        <div class="chart-container large" style="margin-top: 20px;">
+          <canvas id="patrimonyChart"></canvas>
+        </div>
+
+        <!-- Milestones -->
+        <div class="patrimony-milestones" id="patrimonyMilestones">
+          <p class="placeholder-text">Lancez l'estimation pour voir vos objectifs patrimoniaux.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== OBJECTIFS FINANCIERS VIEW ==================== -->
+    <section class="view" id="view-goals">
+      <div class="view-header">
+        <h1 style="display:flex; align-items:center; gap:8px;"><i data-lucide="target" style="width: 24px; height: 24px;"></i> Objectifs Financiers</h1>
+        <div class="view-actions">
+          <button class="btn btn-primary" id="addGoalBtn" style="display:flex; align-items:center; gap:6px;">
+            <i data-lucide="plus" style="width: 16px; height: 16px;"></i> Nouvel objectif
+          </button>
+        </div>
+      </div>
+
+      <!-- Goals Summary -->
+      <div class="summary-cards goals-summary" id="goalsSummary">
+        <div class="summary-card">
+          <div class="card-label">Objectifs actifs</div>
+          <div class="card-value" id="goalsActiveCount">0</div>
+        </div>
+        <div class="summary-card">
+          <div class="card-label">Complétés</div>
+          <div class="card-value" id="goalsCompletedCount">0</div>
+        </div>
+        <div class="summary-card">
+          <div class="card-label">Total épargné</div>
+          <div class="card-value" id="goalsTotalSaved">0 €</div>
+        </div>
+        <div class="summary-card">
+          <div class="card-label">Total restant</div>
+          <div class="card-value" id="goalsTotalRemaining">0 €</div>
+        </div>
+      </div>
+
+      <!-- Goals List -->
+      <div class="card section-card">
+        <div class="section-header">
+          <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="list-checks" style="width: 20px; height: 20px;"></i> Mes Objectifs</h2>
+        </div>
+        <div class="goals-container" id="goalsContainer">
+          <p class="placeholder-text">Ajoutez votre premier objectif financier pour commencer le suivi.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SIMULATION MONTE-CARLO VIEW ==================== -->
+    <section class="view" id="view-simulation">
+      <div class="view-header">
+        <h1 style="display:flex; align-items:center; gap:8px;"><i data-lucide="atom" style="width: 24px; height: 24px;"></i> Simulation Monte-Carlo</h1>
+      </div>
+
+      <!-- Configuration Panel -->
+      <div class="card section-card sim-config-panel">
+        <div class="section-header">
+          <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="sliders-horizontal" style="width: 20px; height: 20px;"></i> Configuration du Modèle</h2>
+        </div>
+
+        <!-- Model Selector -->
+        <div class="sim-model-selector">
+          <button class="sim-model-btn active" data-model="gbm" id="simModelGBM">Mouvement Brownien (GBM)</button>
+          <button class="sim-model-btn" data-model="ou" id="simModelOU">Retour à la Moyenne (O-U)</button>
+        </div>
+
+        <!-- Presets -->
+        <div style="margin-bottom: 20px;">
+          <label style="font-size:12px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.05em; display:block; margin-bottom:8px;">Presets</label>
+          <div class="sim-presets">
+            <button class="sim-preset-btn" data-preset="actions_fr">Actions FR</button>
+            <button class="sim-preset-btn" data-preset="sp500">S&P 500</button>
+            <button class="sim-preset-btn" data-preset="obligations">Obligations</button>
+            <button class="sim-preset-btn" data-preset="crypto">Crypto</button>
+            <button class="sim-preset-btn" data-preset="immo">Immobilier</button>
+            <button class="sim-preset-btn active" data-preset="custom">Personnalisé</button>
+          </div>
+        </div>
+
+        <!-- Parameters Grid -->
+        <div class="controls-grid sim-controls">
+          <div class="control-group">
+            <label for="simS0">Prix initial (S₀) €</label>
+            <input type="number" id="simS0" value="1000" min="1" step="100">
+          </div>
+          <div class="control-group">
+            <label for="simMu">Rendement annuel μ (%)</label>
+            <input type="number" id="simMu" value="7" min="-50" max="200" step="0.5">
+          </div>
+          <div class="control-group">
+            <label for="simSigma">Volatilité annuelle σ (%)</label>
+            <input type="number" id="simSigma" value="18" min="0.1" max="300" step="0.5">
+          </div>
+          <div class="control-group">
+            <label for="simT">Horizon T (jours)</label>
+            <input type="number" id="simT" value="252" min="1" max="2520" step="1">
+          </div>
+          <div class="control-group">
+            <label for="simN">Nb. simulations (N)</label>
+            <input type="number" id="simN" value="200" min="10" max="2000" step="10">
+          </div>
+          <div class="control-group sim-ou-param">
+            <label for="simTheta">Vitesse retour θ</label>
+            <input type="number" id="simTheta" value="0.5" min="0.01" max="10" step="0.05">
+          </div>
+          <div class="control-group sim-ou-param">
+            <label for="simK">Seuil signal (k × σ)</label>
+            <input type="number" id="simK" value="1.5" min="0.5" max="5" step="0.1">
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; margin-top: 20px;">
+          <button class="btn btn-primary sim-run-btn" id="runSimulation" style="display:flex; align-items:center; gap:8px; padding: 10px 24px; font-size: 15px;">
+            <i data-lucide="play" style="width:18px; height:18px;"></i> Lancer la simulation
+          </button>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="summary-cards sim-kpi-cards" id="simKpiCards">
+        <div class="card summary-card">
+          <div class="card-label" style="display:flex; align-items:center; gap:6px;"><i data-lucide="shield-alert"></i> VaR 95%</div>
+          <div class="card-value" id="simVaR95">--</div>
+        </div>
+        <div class="card summary-card">
+          <div class="card-label" style="display:flex; align-items:center; gap:6px;"><i data-lucide="shield-x"></i> VaR 99%</div>
+          <div class="card-value" id="simVaR99">--</div>
+        </div>
+        <div class="card summary-card">
+          <div class="card-label" style="display:flex; align-items:center; gap:6px;"><i data-lucide="alert-octagon"></i> CVaR 95%</div>
+          <div class="card-value" id="simCVaR95">--</div>
+        </div>
+        <div class="card summary-card">
+          <div class="card-label" style="display:flex; align-items:center; gap:6px;"><i data-lucide="target"></i> Rendement Médian</div>
+          <div class="card-value" id="simMedian">--</div>
+        </div>
+        <div class="card summary-card">
+          <div class="card-label" style="display:flex; align-items:center; gap:6px;"><i data-lucide="trophy"></i> Meilleur Scénario</div>
+          <div class="card-value" id="simBest">--</div>
+        </div>
+        <div class="card summary-card">
+          <div class="card-label" style="display:flex; align-items:center; gap:6px;"><i data-lucide="flame"></i> Pire Scénario</div>
+          <div class="card-value" id="simWorst">--</div>
+        </div>
+      </div>
+
+      <!-- Spaghetti Chart -->
+      <div class="card chart-card wide" style="margin-bottom:24px;">
+        <div class="section-header">
+          <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="activity" style="width: 20px; height: 20px;"></i> Trajectoires Simulées</h2>
+          <span class="sim-path-count" id="simPathCount"></span>
+        </div>
+        <div class="chart-container large">
+          <canvas id="spaghettiChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Distribution + Signals Row -->
+      <div class="charts-row dual">
+        <!-- Distribution Histogram -->
+        <div class="card chart-card">
+          <div class="section-header">
+            <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="bar-chart-2" style="width: 20px; height: 20px;"></i> Distribution des Rendements</h2>
+          </div>
+          <div class="chart-container">
+            <canvas id="distributionChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Mean Reversion Signals -->
+        <div class="card section-card sim-signals-card">
+          <div class="section-header">
+            <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="radio" style="width: 20px; height: 20px;"></i> Signaux Mean Reversion</h2>
+          </div>
+          <div class="table-wrapper scrollable" style="max-height: 300px;">
+            <table class="data-table compact sim-signal-table" id="simSignalTable">
+              <thead>
+                <tr><th>Jour</th><th>Type</th><th>Prix</th><th>Écart</th></tr>
+              </thead>
+              <tbody id="simSignalBody">
+                <tr><td colspan="4" class="placeholder-text">Lancez une simulation O-U pour voir les signaux.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Documentation -->
+      <div class="card section-card sim-docs">
+        <details>
+          <summary style="cursor:pointer; display:flex; align-items:center; gap:8px; font-size:16px; font-weight:600; color:var(--text-primary);">
+            <i data-lucide="book-open" style="width: 20px; height: 20px;"></i> Comment calibrer les paramètres μ, σ et θ ?
+          </summary>
+          <div style="margin-top: 16px; color: var(--text-secondary); line-height: 1.7; font-size: 14px;">
+            <h3 style="color:var(--text-primary); margin-bottom:8px;">1. Rendement espéré (μ)</h3>
+            <p>Calculez le <strong>log-rendement moyen annualisé</strong> à partir de données historiques :</p>
+            <div class="sim-formula">μ = (1/n) × Σ ln(S<sub>t+1</sub> / S<sub>t</sub>) × 252</div>
+            <p>Où 252 est le nombre de jours de trading par an. Pour le CAC 40 sur les 20 dernières années, μ ≈ 6-8%.</p>
+
+            <h3 style="color:var(--text-primary); margin: 16px 0 8px;">2. Volatilité (σ)</h3>
+            <p>Calculez l'<strong>écart-type annualisé</strong> des log-rendements :</p>
+            <div class="sim-formula">σ = écart-type(log-rendements quotidiens) × √252</div>
+            <p>Valeurs typiques : Actions ~15-25%, Obligations ~3-8%, Crypto ~50-80%.</p>
+
+            <h3 style="color:var(--text-primary); margin: 16px 0 8px;">3. Vitesse de retour θ (Ornstein-Uhlenbeck)</h3>
+            <p>Estimée par <strong>régression linéaire</strong> sur les variations de prix :</p>
+            <div class="sim-formula">Δx<sub>t</sub> = a + b × x<sub>t-1</sub> → θ = -b / dt</div>
+            <p>Plus θ est élevé (ex: 2-5), plus l'actif revient vite vers sa moyenne. Un θ faible (0.1-0.5) indique une faible force de rappel.</p>
+
+            <h3 style="color:var(--text-primary); margin: 16px 0 8px;">4. Presets fournis</h3>
+            <table class="data-table compact" style="margin-top:8px;">
+              <thead><tr><th style="text-align:left">Preset</th><th>μ</th><th>σ</th><th>Commentaire</th></tr></thead>
+              <tbody>
+                <tr><td style="text-align:left">Actions FR (CAC)</td><td>7%</td><td>18%</td><td>Historique long terme</td></tr>
+                <tr><td style="text-align:left">S&P 500</td><td>10%</td><td>15%</td><td>Indice américain</td></tr>
+                <tr><td style="text-align:left">Obligations</td><td>3%</td><td>5%</td><td>Investment Grade</td></tr>
+                <tr><td style="text-align:left">Crypto (BTC)</td><td>15%</td><td>60%</td><td>Très volatile</td></tr>
+                <tr><td style="text-align:left">Immobilier</td><td>4%</td><td>8%</td><td>SCPI / REITs</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ==================== IMPORT / EXPORT VIEW ==================== -->
+    <section class="view" id="view-import">
+      <div class="view-header">
+        <h1 style="display:flex; align-items:center; gap:8px;"><i data-lucide="download" style="width: 24px; height: 24px;"></i> Import / Export</h1>
+      </div>
+
+      <div class="import-export-grid">
+        <div class="card section-card">
+          <div class="section-header">
+            <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="download-cloud" style="width: 20px; height: 20px;"></i> Exporter les données</h2>
+          </div>
+          <p class="section-desc">Téléchargez vos données au format CSV ou JSON.</p>
+          <div class="export-actions">
+            <button class="btn btn-secondary" id="exportAllJson" style="display:flex; align-items:center; gap:6px; justify-content:center;">
+              <i data-lucide="file-json" style="width: 16px; height: 16px;"></i> Exporter JSON complet
+            </button>
+            <button class="btn btn-secondary" id="exportAllCsv" style="display:flex; align-items:center; gap:6px; justify-content:center;">
+              <i data-lucide="file-spreadsheet" style="width: 16px; height: 16px;"></i> Exporter CSV (Tableau Principal)
+            </button>
+          </div>
+        </div>
+
+        <div class="card section-card">
+          <div class="section-header">
+            <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="upload-cloud" style="width: 20px; height: 20px;"></i> Importer des données</h2>
+          </div>
+          <p class="section-desc">Importez un fichier JSON précédemment exporté.</p>
+          <div class="drop-zone" id="dropZone">
+            <div class="drop-zone-icon" style="margin-bottom:10px;"><i data-lucide="file-up" style="width: 32px; height: 32px; color: var(--text-muted);"></i></div>
+            <p>Cliquez ou glissez-déposez un fichier JSON ici</p>
+            <input type="file" id="fileInput" accept=".json" style="display: none;">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== SETTINGS VIEW ==================== -->
+    <section class="view" id="view-settings">
+      <div class="view-header">
+        <h1 style="display:flex; align-items:center; gap:8px;"><i data-lucide="settings" style="width: 24px; height: 24px;"></i> Paramètres</h1>
+      </div>
+
+      <div class="card section-card max-w-md">
+        <div class="section-header">
+          <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="palette" style="width: 20px; height: 20px;"></i> Apparence</h2>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Mode sombre</div>
+            <div class="setting-desc">Basculer entre le thème clair et sombre</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="darkModeToggle">
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Devise</div>
+            <div class="setting-desc">Devise utilisée pour l'affichage</div>
+          </div>
+          <select class="filter-select" id="currencySelect">
+            <option value="EUR" selected>€ Euro</option>
+            <option value="USD">$ Dollar US</option>
+            <option value="GBP">£ Livre Sterling</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Cloud Sync -->
+      <div class="card section-card max-w-md">
+        <div class="section-header">
+          <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="cloud" style="width: 20px; height: 20px;"></i> Sauvegarde Cloud (GitHub Gist)</h2>
+        </div>
+        <div class="setting-row" style="flex-direction:column; align-items:stretch; gap:10px;">
+          <div>
+            <div class="setting-label">Token GitHub</div>
+            <div class="setting-desc" style="margin-bottom:8px;">Créez un <a href="https://github.com/settings/tokens/new?scopes=gist&description=Finance+Tracker+Sync" target="_blank" style="color:var(--accent);">Personal Access Token</a> avec le scope <code>gist</code></div>
+            <input type="password" id="ghTokenInput" class="form-input" placeholder="ghp_xxxx..." style="width:100%; padding:8px 12px; border:1px solid var(--border-color); border-radius:var(--radius-sm); background:var(--bg-input); color:var(--text-primary); font-size:13px;">
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn btn-primary" id="cloudBackupBtn" style="display:flex; align-items:center; gap:6px;"><i data-lucide="upload-cloud" style="width:14px; height:14px;"></i> Sauvegarder</button>
+            <button class="btn btn-secondary" id="cloudRestoreBtn" style="display:flex; align-items:center; gap:6px;"><i data-lucide="download-cloud" style="width:14px; height:14px;"></i> Restaurer</button>
+            <span class="text-sm" id="cloudSyncStatus" style="color:var(--text-secondary); font-size:12px; align-self:center;"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card section-card max-w-md danger-zone">
+        <div class="section-header">
+          <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="alert-triangle" style="width: 20px; height: 20px;"></i> Zone de Danger</h2>
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Réinitialiser les données</div>
+            <div class="settings-group">
+              <p class="text-sm" style="margin-bottom: 12px; color: var(--text-muted);">Supprime définitivement toutes les données du navigateur.</p>
+              <button class="btn btn-danger" id="resetDataBtn" style="display:flex; align-items:center; gap:6px; justify-content:center;">
+                <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i> Tout réinitialiser
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">Ajouter</h3>
+        <button class="modal-close" id="modalClose">×</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="modalCancel">Annuler</button>
+        <button class="btn btn-primary" id="modalConfirm">Confirmer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script src="app.js?v=20260530"></script>
+</body>
+</html>
