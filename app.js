@@ -457,8 +457,9 @@ function setChangeEl(id, val, invert = false) {
 function getChartDefaults() {
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   return {
-    gridColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
-    textColor: isDark ? '#9b9b9b' : '#787774',
+    gridColor: isDark ? 'rgba(148, 163, 184, 0.08)' : 'rgba(14, 165, 233, 0.06)',
+    textColor: isDark ? '#94a3b8' : '#475569',
+    bgCard: isDark ? '#1e293b' : '#ffffff',
   };
 }
 
@@ -492,26 +493,26 @@ function renderNetWorthChart() {
         {
           label: 'Épargne Cumulative',
           data: epargneData,
-          borderColor: '#4daa57',
-          backgroundColor: 'rgba(77,170,87,0.08)',
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16, 185, 129, 0.08)',
           fill: true,
           tension: 0.4,
           borderWidth: 2.5,
           pointRadius: 0,
           pointHoverRadius: 5,
-          pointHoverBackgroundColor: '#4daa57',
+          pointHoverBackgroundColor: '#10b981',
         },
         {
           label: 'Dépenses Cumulatives',
           data: depensesData,
-          borderColor: '#e03e3e',
-          backgroundColor: 'rgba(224,62,62,0.06)',
+          borderColor: '#ef4444',
+          backgroundColor: 'rgba(239, 68, 68, 0.06)',
           fill: true,
           tension: 0.4,
           borderWidth: 2.5,
           pointRadius: 0,
           pointHoverRadius: 5,
-          pointHoverBackgroundColor: '#e03e3e',
+          pointHoverBackgroundColor: '#ef4444',
         }
       ],
     },
@@ -612,7 +613,7 @@ function renderWeeklyCharts() {
           { label: 'Fixes', data: last12.map(d => parseFloat(d.depenses_fixes)||0), backgroundColor: '#e03e3e', borderRadius: 2 },
           { label: 'Courses', data: last12.map(d => parseFloat(d.courses)||0), backgroundColor: '#cb912f', borderRadius: 2 },
           { label: 'Sorties', data: last12.map(d => parseFloat(d.sorties)||0), backgroundColor: '#9b51e0', borderRadius: 2 },
-          { label: 'Achats', data: last12.map(d => parseFloat(d.achats)||0), backgroundColor: '#2eaadc', borderRadius: 2 }
+          { label: 'Achats', data: last12.map(d => parseFloat(d.achats)||0), backgroundColor: '#0ea5e9', borderRadius: 2 }
         ],
       },
       options: {
@@ -737,7 +738,7 @@ const BUDGET_CATEGORIES = [
     ]
   },
   {
-    id: 'courses', label: 'Courses', color: '#2eaadc', icon: 'shopping-cart',
+    id: 'courses', label: 'Courses', color: '#0ea5e9', icon: 'shopping-cart',
     subs: [
       { id: 'supermarche', label: 'Supermarché / Alimentaire' },
       { id: 'marche_bio', label: 'Marché / Bio' },
@@ -779,7 +780,7 @@ const BUDGET_CATEGORIES = [
     ]
   },
   {
-    id: 'epargne', label: 'Épargne', color: '#4daa57', icon: 'piggy-bank',
+    id: 'epargne', label: 'Épargne', color: '#10b981', icon: 'piggy-bank',
     subs: [
       { id: 'livrets', label: 'Livrets (A, jeune, LDDS…)' },
       { id: 'pea_bourse', label: 'PEA / Bourse' },
@@ -1348,7 +1349,7 @@ function renderAccountCards() {
   const latest = state.accountData[state.accountData.length - 1];
   if (!latest) { container.innerHTML = '<p class="placeholder-text">Aucune donnée</p>'; return; }
 
-  const colors = ['#2eaadc', '#4daa57', '#6fcf97', '#cb912f', '#9b51e0', '#e03e3e', '#2d9cdb', '#f2c94c'];
+  const colors = ['#0ea5e9', '#10b981', '#6fcf97', '#cb912f', '#9b51e0', '#e03e3e', '#2d9cdb', '#f2c94c'];
   let colorIdx = 0;
 
   const accounts = state.accountColumns
@@ -1604,13 +1605,13 @@ function renderAccountDistChart() {
 
   const labels = state.accountData.map(d => d.semaine || d.date || '');
 
-  const colors = ['#2eaadc', '#4daa57', '#6fcf97', '#cb912f', '#9b51e0', '#e03e3e', '#2d9cdb', '#f2c94c'];
+  const colors = ['#0ea5e9', '#10b981', '#6fcf97', '#cb912f', '#9b51e0', '#e03e3e', '#2d9cdb', '#f2c94c'];
   let colorIdx = 0;
 
   const datasets = state.accountColumns
     .filter(c => c.type === 'number' && c.id !== 'variation')
     .map(c => {
-      const color = c.id === 'total' ? '#2eaadc' : colors[colorIdx++ % colors.length];
+      const color = c.id === 'total' ? '#0ea5e9' : colors[colorIdx++ % colors.length];
       const isTotal = c.id === 'total';
       return {
         label: c.label,
@@ -1716,9 +1717,9 @@ function renderAnalyticsMonthlyChart(data) {
     data: {
       labels: data.map(d => d.mois || 'Inconnu'),
       datasets: [
-        { label: 'Revenus', data: data.map(d => parseFloat(d.total)||0), backgroundColor: '#2eaadc', borderRadius: 4 },
+        { label: 'Revenus', data: data.map(d => parseFloat(d.total)||0), backgroundColor: '#0ea5e9', borderRadius: 4 },
         { label: 'Dépenses', data: data.map(d => (parseFloat(d.depenses_fixes)||0)+(parseFloat(d.courses)||0)+(parseFloat(d.sorties)||0)+(parseFloat(d.achats)||0)), backgroundColor: '#e03e3e', borderRadius: 4 },
-        { label: 'Épargne', data: data.map(d => parseFloat(d.epargne)||0), backgroundColor: '#4daa57', borderRadius: 4 }
+        { label: 'Épargne', data: data.map(d => parseFloat(d.epargne)||0), backgroundColor: '#10b981', borderRadius: 4 }
       ]
     },
     options: {
@@ -1744,7 +1745,7 @@ function renderSankeyChart(sal, aut, rev, ep, fix, cour, sort, ach) {
   const colors = {
     'Salaire': '#2d9cdb',
     'Autres': '#56ccf2',
-    'Revenus': '#2eaadc',
+    'Revenus': '#0ea5e9',
     'Épargne': '#6fcf97',
     'Dépenses': '#eb5757',
     'Fixes': '#f2994a',
@@ -1851,7 +1852,7 @@ function runProjection() {
         {
           label: 'Valeur totale',
           data,
-          borderColor: '#2eaadc',
+          borderColor: '#0ea5e9',
           backgroundColor: 'rgba(46,170,220,0.1)',
           fill: true,
           tension: 0.3,
@@ -1862,7 +1863,7 @@ function runProjection() {
         {
           label: 'Contributions',
           data: contributionData,
-          borderColor: '#4daa57',
+          borderColor: '#10b981',
           borderDash: [5, 5],
           borderWidth: 2,
           pointRadius: 0,
@@ -2123,12 +2124,12 @@ function renderPatrimonyChart(histLabels, histData, projLabels, projTrend, projO
         {
           label: 'Historique',
           data: histLine,
-          borderColor: '#2eaadc',
+          borderColor: '#0ea5e9',
           backgroundColor: 'rgba(46,170,220,0.08)',
           fill: true,
           borderWidth: 3,
           pointRadius: 4,
-          pointBackgroundColor: '#2eaadc',
+          pointBackgroundColor: '#0ea5e9',
           pointBorderColor: '#fff',
           pointBorderWidth: 2,
           tension: 0.3,
@@ -2137,7 +2138,7 @@ function renderPatrimonyChart(histLabels, histData, projLabels, projTrend, projO
         {
           label: 'Tendance estimée',
           data: trendLine,
-          borderColor: '#4daa57',
+          borderColor: '#10b981',
           borderWidth: 2.5,
           borderDash: [8, 4],
           pointRadius: 0,
@@ -2409,7 +2410,7 @@ function renderAllocationDonut() {
   const labels = accountKeys.map(a => a.label);
   const total = values.reduce((s, v) => s + v, 0);
 
-  const colors = ['#2eaadc', '#4daa57', '#cb912f', '#e03e3e', '#9b59b6', '#1abc9c', '#e67e22', '#3498db', '#e74c3c'];
+  const colors = ['#0ea5e9', '#10b981', '#cb912f', '#e03e3e', '#9b59b6', '#1abc9c', '#e67e22', '#3498db', '#e74c3c'];
   const defaults = getChartDefaults();
 
   if (state.charts.allocationDonut) state.charts.allocationDonut.destroy();
@@ -2755,7 +2756,7 @@ function renderSavingsRateChart() {
         {
           label: 'Taux d\'épargne (%)',
           data: rates,
-          borderColor: '#4daa57',
+          borderColor: '#10b981',
           backgroundColor: 'rgba(77, 170, 87, 0.1)',
           fill: true,
           tension: 0.4,
@@ -3372,7 +3373,7 @@ function renderSpaghettiChart(paths, T, S0) {
   datasets.push({
     label: 'Médiane (P50)',
     data: p50,
-    borderColor: '#2eaadc',
+    borderColor: '#0ea5e9',
     borderWidth: 3,
     pointRadius: 0,
     tension: 0.3,
