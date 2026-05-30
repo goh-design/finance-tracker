@@ -970,6 +970,300 @@ body {
 }
 
 /* ==========================================
+   BUDGET TRACKER — Aero Style
+   ========================================== */
+.budget-cat-item {
+  margin-bottom: 4px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-tertiary);
+  backdrop-filter: blur(6px);
+  border: var(--glass-border);
+  transition: all var(--transition-fast);
+}
+.budget-cat-item:hover { box-shadow: var(--shadow-sm); }
+
+.budget-cat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  user-select: none;
+}
+.budget-cat-header:hover { background: var(--bg-hover); }
+
+.budget-cat-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--text-primary);
+}
+.budget-cat-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px rgba(0,0,0,0.15);
+}
+.budget-cat-chevron {
+  transition: transform var(--transition-normal);
+  color: var(--text-tertiary);
+  display: flex;
+}
+.budget-cat-chevron.open { transform: rotate(90deg); }
+
+.budget-cat-amount {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.budget-cat-pct { font-size: 12px; font-weight: 500; }
+
+.budget-cat-bar {
+  height: 5px;
+  background: var(--divider);
+  border-radius: 0 0 4px 4px;
+  overflow: hidden;
+}
+.budget-cat-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.6s ease;
+}
+.budget-cat-fill.over {
+  background: var(--danger) !important;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+}
+
+.budget-sub-panel {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease;
+  background: rgba(0,0,0,0.02);
+}
+[data-theme="dark"] .budget-sub-panel { background: rgba(255,255,255,0.02); }
+.budget-sub-panel.open { max-height: 800px; }
+
+.budget-sub-list { padding: 8px 16px 12px; }
+.budget-sub-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+}
+.budget-sub-name {
+  flex: 0 0 200px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.budget-sub-bar-wrap { flex: 1; min-width: 80px; }
+.budget-sub-bar {
+  height: 4px;
+  background: var(--divider);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.budget-sub-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+.budget-sub-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 120px;
+}
+.budget-sub-input {
+  width: 80px;
+  padding: 5px 8px;
+  border: var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  backdrop-filter: blur(4px);
+  color: var(--text-primary);
+  font-size: 12.5px;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  outline: none;
+  transition: all var(--transition-fast);
+}
+.budget-sub-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+.budget-sub-euro { font-size: 12px; color: var(--text-tertiary); }
+.budget-sub-total {
+  padding: 8px 0;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--divider);
+  margin-top: 4px;
+}
+
+/* ==========================================
+   GOALS — Cards Grid
+   ========================================== */
+.goals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.goal-card {
+  padding: 20px;
+  position: relative;
+}
+.goal-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.goal-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.goal-card-subtitle {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-top: 2px;
+}
+.goal-card-actions { display: flex; gap: 4px; }
+.goal-card-actions button {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+.goal-card-actions button:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.goal-progress-bar {
+  height: 8px;
+  background: var(--divider);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 8px 0;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.08);
+}
+.goal-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.8s ease;
+  background: linear-gradient(90deg, var(--accent), #38bdf8);
+}
+.goal-progress-fill.complete {
+  background: linear-gradient(90deg, var(--success), #34d399);
+}
+.goal-progress-text {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+}
+
+/* ==========================================
+   RECURRENCE MANAGER
+   ========================================== */
+.recurrence-list { margin-bottom: 16px; }
+.recurrence-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--bg-tertiary);
+  backdrop-filter: blur(6px);
+  border: var(--glass-border);
+  border-radius: var(--radius-md);
+  margin-bottom: 8px;
+  transition: all var(--transition-fast);
+}
+.recurrence-item:hover { background: var(--bg-hover); }
+
+.recurrence-info { flex: 1; }
+.recurrence-name { font-weight: 600; font-size: 13.5px; color: var(--text-primary); }
+.recurrence-details { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
+.recurrence-amount {
+  font-weight: 700;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  margin-right: 12px;
+}
+.recurrence-actions button {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+.recurrence-actions button:hover {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+
+/* ==========================================
+   MONTH COMPARISON
+   ========================================== */
+.comparison-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.comparison-controls select {
+  padding: 8px 14px;
+  background: var(--bg-input);
+  backdrop-filter: blur(6px);
+  border: var(--glass-border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+/* ==========================================
+   FORM INPUT (generic)
+   ========================================== */
+.form-input {
+  width: 100%;
+  padding: 9px 14px;
+  background: var(--bg-input);
+  backdrop-filter: blur(6px);
+  border: var(--glass-border);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-family: inherit;
+  outline: none;
+  transition: all var(--transition-fast);
+}
+.form-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-light);
+}
+
+/* ==========================================
    SPECIAL COMPONENTS
    ========================================== */
 
