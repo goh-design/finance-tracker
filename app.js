@@ -2920,13 +2920,47 @@ function initCloudSync() {
     statusEl.textContent = `Dernière sync: ${new Date(lastSync).toLocaleString('fr-FR')}`;
   }
 
-  // Auto-restore on fresh device: if no local data but cloud exists
+  // Auto-find and restore on fresh device
   const token = getGHToken();
   const gistId = localStorage.getItem('ft_gistId');
-  const hasLocalData = state.weeklyData.length > 0 || state.accountData.length > 0;
-  if (token && gistId && !hasLocalData) {
-    showToast('☁️ Restauration depuis le cloud...', 'info');
-    cloudRestore();
+  if (token && !gistId) {
+    // Search user's gists for our backup
+    findAndRestoreGist(token);
+  } else if (token && gistId) {
+    const hasLocalData = state.weeklyData.length > 1 || state.accountData.length > 1;
+    if (!hasLocalData) {
+      showToast('☁️ Restauration depuis le cloud...', 'info');
+      cloudRestore();
+    }
+  }
+}
+
+async function findAndRestoreGist(token) {
+  const statusEl = document.getElementById('cloudSyncStatus');
+  if (statusEl) statusEl.textContent = '🔍 Recherche du backup...';
+  try {
+    const response = await fetch('https://api.github.com/gists', {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (!response.ok) {
+      if (statusEl) statusEl.textContent = '❌ Token invalide';
+      showToast('Token invalide — vérifiez qu\'il a le scope "gist"', 'error');
+      return;
+    }
+    const gists = await response.json();
+    const found = gists.find(g => g.description === GIST_DESCRIPTION || (g.files && g.files['finance-tracker-backup.json']));
+    if (found) {
+      localStorage.setItem('ft_gistId', found.id);
+      if (statusEl) statusEl.textContent = '☁️ Backup trouvé ! Restauration...';
+      showToast('☁️ Backup trouvé, restauration...', 'info');
+      await cloudRestore();
+    } else {
+      if (statusEl) statusEl.textContent = '✅ Token OK — aucun backup trouvé';
+      showToast('Token valide ! Cliquez Sauvegarder pour créer un backup.', 'success');
+    }
+  } catch (err) {
+    if (statusEl) statusEl.textContent = '❌ Erreur réseau';
+    showToast('Erreur: ' + err.message, 'error');
   }
 }
 
@@ -2992,10 +3026,10 @@ async function cloudRestore() {
   const token = getGHToken();
   if (!token) { showToast('Entrez votre token GitHub d\'abord', 'error'); return; }
 
-  const gistId = localStorage.getItem('ft_gistId');
+  let gistId = localStorage.getItem('ft_gistId');
   if (!gistId) {
-    // Try to find gist by description
-    showToast('Aucun backup trouvé. Sauvegardez d\'abord.', 'error');
+    // Search for backup in user's gists
+    await findAndRestoreGist(token);
     return;
   }
 
