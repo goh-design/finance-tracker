@@ -972,6 +972,64 @@ body {
 /* ==========================================
    BUDGET TRACKER — Aero Style
    ========================================== */
+
+/* Layout: donut left, categories right */
+.budget-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+.budget-donut-wrap {
+  flex: 0 0 220px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.budget-donut-container {
+  width: 200px;
+  height: 200px;
+  position: relative;
+}
+.budget-donut-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.budget-total-label {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.budget-total-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.budget-categories {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  .budget-layout {
+    flex-direction: column;
+    align-items: center;
+  }
+  .budget-donut-wrap { flex: none; }
+  .budget-categories { width: 100%; }
+}
+
 .budget-cat-item {
   margin-bottom: 4px;
   border-radius: var(--radius-md);
