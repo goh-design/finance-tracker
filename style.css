@@ -1433,6 +1433,37 @@ body {
   }
 }
 
+/* Portfolio tag inputs */
+.pf-tag-input {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--divider);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 11.5px;
+  padding: 3px 8px;
+  width: 100px;
+  outline: none;
+  transition: all var(--transition-fast);
+}
+.pf-tag-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-light);
+  background: var(--bg-input);
+}
+.pf-tag-input::placeholder {
+  color: var(--text-tertiary);
+  font-style: italic;
+}
+
+/* View mode selector */
+.portfolio-view-modes {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
 /* ==========================================
    SPECIAL COMPONENTS
    ========================================== */

@@ -842,18 +842,22 @@
                   <tr>
                     <th style="text-align:left; width:40px;">#</th>
                     <th style="text-align:left;">Nom</th>
+                    <th style="text-align:left;">Type</th>
+                    <th style="text-align:left;">Région</th>
+                    <th style="text-align:left;">Secteur</th>
                     <th>Valeur (€)</th>
-                    <th>Allocation (%)</th>
+                    <th>Alloc. (%)</th>
                     <th class="actions-col"></th>
                   </tr>
                 </thead>
                 <tbody id="portfolioTableBody">
-                  <tr><td colspan="5" class="placeholder-text">Ajoutez un portefeuille puis des positions.</td></tr>
+                  <tr><td colspan="8" class="placeholder-text">Ajoutez un portefeuille puis des positions.</td></tr>
                 </tbody>
                 <tfoot id="portfolioTableFoot" style="display:none;">
                   <tr style="font-weight:700;">
                     <td></td>
                     <td style="text-align:left;">Total</td>
+                    <td></td><td></td><td></td>
                     <td id="portfolioTotalValue" style="text-align:right;">0,00 €</td>
                     <td style="text-align:right;">100%</td>
                     <td></td>
@@ -870,6 +874,12 @@
               <h2 style="display:flex; align-items:center; gap:6px;">
                 <i data-lucide="pie-chart" style="width:18px; height:18px;"></i> Allocation
               </h2>
+            </div>
+            <div class="portfolio-view-modes" id="portfolioViewModes">
+              <button class="chart-btn active" data-mode="name">Par nom</button>
+              <button class="chart-btn" data-mode="type">Par type</button>
+              <button class="chart-btn" data-mode="region">Par région</button>
+              <button class="chart-btn" data-mode="sector">Par secteur</button>
             </div>
             <div class="chart-container small" style="max-width:280px; margin:0 auto;">
               <canvas id="portfolioDonutChart"></canvas>
