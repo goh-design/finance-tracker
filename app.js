@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initProjections();
   updateLastUpdated();
   // Phase 3
-  setTimeout(() => { checkAlerts(); initMonthComparison(); initCloudSync(); }, 300);
+  setTimeout(() => { checkAlerts(); initMonthComparison(); initCloudSync(); initPortfolio(); }, 300);
 });
 
 // ==========================================
@@ -2872,6 +2872,266 @@ function renderMobileWidget() {
 }
 
 // ==========================================
+//  PORTFOLIO — Investment Allocation Tracker
+// ==========================================
+const PORTFOLIO_KEY = 'ft_portfolios';
+const PORTFOLIO_ACTIVE_KEY = 'ft_portfolio_active';
+const PORTFOLIO_COLORS = ['#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#14b8a6','#f97316','#6366f1','#06b6d4','#84cc16','#e11d48'];
+
+function getPortfolios() {
+  try { return JSON.parse(localStorage.getItem(PORTFOLIO_KEY)) || {}; }
+  catch { return {}; }
+}
+function savePortfolios(data) {
+  localStorage.setItem(PORTFOLIO_KEY, JSON.stringify(data));
+  saveData(); // triggers auto-sync
+}
+function getActivePortfolioId() {
+  return localStorage.getItem(PORTFOLIO_ACTIVE_KEY) || '';
+}
+function setActivePortfolioId(id) {
+  localStorage.setItem(PORTFOLIO_ACTIVE_KEY, id);
+}
+
+function initPortfolio() {
+  const addBtn = document.getElementById('addPortfolioBtn');
+  const addPosBtn = document.getElementById('addPositionBtn');
+  const renameBtn = document.getElementById('renamePortfolioBtn');
+  const deleteBtn = document.getElementById('deletePortfolioBtn');
+
+  if (addBtn) addBtn.onclick = () => {
+    const name = prompt('Nom du portefeuille (ex: PEA, Broker CTO, Assurance-Vie) :');
+    if (!name || !name.trim()) return;
+    const portfolios = getPortfolios();
+    const id = 'pf_' + Date.now();
+    portfolios[id] = { name: name.trim(), positions: [] };
+    savePortfolios(portfolios);
+    setActivePortfolioId(id);
+    renderPortfolio();
+  };
+
+  if (addPosBtn) addPosBtn.onclick = () => {
+    const activeId = getActivePortfolioId();
+    if (!activeId) { showToast('Créez un portefeuille d\'abord', 'error'); return; }
+    const portfolios = getPortfolios();
+    if (!portfolios[activeId]) return;
+    portfolios[activeId].positions.push({ name: 'Nouvelle position', value: 0 });
+    savePortfolios(portfolios);
+    renderPortfolio();
+  };
+
+  if (renameBtn) renameBtn.onclick = () => {
+    const activeId = getActivePortfolioId();
+    const portfolios = getPortfolios();
+    if (!activeId || !portfolios[activeId]) return;
+    const name = prompt('Nouveau nom :', portfolios[activeId].name);
+    if (!name || !name.trim()) return;
+    portfolios[activeId].name = name.trim();
+    savePortfolios(portfolios);
+    renderPortfolio();
+  };
+
+  if (deleteBtn) deleteBtn.onclick = () => {
+    const activeId = getActivePortfolioId();
+    const portfolios = getPortfolios();
+    if (!activeId || !portfolios[activeId]) return;
+    if (!confirm(`Supprimer "${portfolios[activeId].name}" et toutes ses positions ?`)) return;
+    delete portfolios[activeId];
+    savePortfolios(portfolios);
+    const remaining = Object.keys(portfolios);
+    setActivePortfolioId(remaining.length > 0 ? remaining[0] : '');
+    renderPortfolio();
+  };
+
+  renderPortfolio();
+}
+
+function renderPortfolio() {
+  const portfolios = getPortfolios();
+  const ids = Object.keys(portfolios);
+  let activeId = getActivePortfolioId();
+  if (!activeId || !portfolios[activeId]) {
+    activeId = ids.length > 0 ? ids[0] : '';
+    setActivePortfolioId(activeId);
+  }
+
+  // Render tabs
+  const tabsContainer = document.getElementById('portfolioTabs');
+  if (tabsContainer) {
+    tabsContainer.innerHTML = ids.map(id => {
+      const p = portfolios[id];
+      return `<button class="portfolio-tab${id === activeId ? ' active' : ''}" data-pfid="${id}">${p.name}</button>`;
+    }).join('');
+    tabsContainer.querySelectorAll('.portfolio-tab').forEach(tab => {
+      tab.onclick = () => {
+        setActivePortfolioId(tab.dataset.pfid);
+        renderPortfolio();
+      };
+    });
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+
+  // Render table
+  const tbody = document.getElementById('portfolioTableBody');
+  const tfoot = document.getElementById('portfolioTableFoot');
+  const totalEl = document.getElementById('portfolioTotalValue');
+  if (!tbody) return;
+
+  if (!activeId || !portfolios[activeId]) {
+    tbody.innerHTML = '<tr><td colspan="5" class="placeholder-text">Ajoutez un portefeuille avec le bouton <b>+</b></td></tr>';
+    if (tfoot) tfoot.style.display = 'none';
+    renderPortfolioDonut([]);
+    return;
+  }
+
+  const positions = portfolios[activeId].positions;
+  const total = positions.reduce((s, p) => s + (parseFloat(p.value) || 0), 0);
+
+  if (positions.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="5" class="placeholder-text">Cliquez <b>Ajouter</b> pour créer une position</td></tr>';
+    if (tfoot) tfoot.style.display = 'none';
+    renderPortfolioDonut([]);
+    return;
+  }
+
+  tbody.innerHTML = positions.map((p, i) => {
+    const val = parseFloat(p.value) || 0;
+    const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0.0';
+    return `<tr>
+      <td style="text-align:left; color:var(--text-tertiary);">${i + 1}</td>
+      <td style="text-align:left;">
+        <input type="text" value="${p.name}" class="pf-name-input" data-idx="${i}"
+          style="background:none; border:none; color:var(--text-primary); font-family:inherit; font-size:13px; font-weight:500; width:100%; outline:none; padding:2px 0;">
+      </td>
+      <td>
+        <input type="number" value="${val}" class="pf-value-input" data-idx="${i}" step="0.01" min="0"
+          style="background:none; border:none; color:var(--text-primary); font-family:inherit; font-size:13px; font-variant-numeric:tabular-nums; width:100px; text-align:right; outline:none; padding:2px 0;">
+      </td>
+      <td style="color:var(--text-secondary);">${pct}%</td>
+      <td class="actions-col">
+        <button class="row-action-btn pf-delete-btn" data-idx="${i}" title="Supprimer" style="opacity:1;">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+
+  if (tfoot) tfoot.style.display = '';
+  if (totalEl) totalEl.textContent = currency(total);
+
+  // Editable name inputs
+  tbody.querySelectorAll('.pf-name-input').forEach(input => {
+    input.onblur = () => {
+      const idx = parseInt(input.dataset.idx);
+      const pfs = getPortfolios();
+      if (pfs[activeId] && pfs[activeId].positions[idx]) {
+        pfs[activeId].positions[idx].name = input.value.trim() || 'Sans nom';
+        savePortfolios(pfs);
+        renderPortfolioDonut(pfs[activeId].positions);
+      }
+    };
+    input.onkeydown = e => { if (e.key === 'Enter') input.blur(); };
+  });
+
+  // Editable value inputs
+  tbody.querySelectorAll('.pf-value-input').forEach(input => {
+    const update = () => {
+      const idx = parseInt(input.dataset.idx);
+      const pfs = getPortfolios();
+      if (pfs[activeId] && pfs[activeId].positions[idx]) {
+        pfs[activeId].positions[idx].value = parseFloat(input.value) || 0;
+        savePortfolios(pfs);
+        renderPortfolio();
+      }
+    };
+    input.onblur = update;
+    input.onkeydown = e => { if (e.key === 'Enter') input.blur(); };
+  });
+
+  // Delete buttons
+  tbody.querySelectorAll('.pf-delete-btn').forEach(btn => {
+    btn.onclick = () => {
+      const idx = parseInt(btn.dataset.idx);
+      const pfs = getPortfolios();
+      if (pfs[activeId]) {
+        pfs[activeId].positions.splice(idx, 1);
+        savePortfolios(pfs);
+        renderPortfolio();
+      }
+    };
+  });
+
+  renderPortfolioDonut(positions);
+}
+
+function renderPortfolioDonut(positions) {
+  const ctx = document.getElementById('portfolioDonutChart');
+  const legendEl = document.getElementById('portfolioDonutLegend');
+  if (!ctx) return;
+
+  if (state.charts.portfolioDonut) state.charts.portfolioDonut.destroy();
+
+  const filtered = (positions || []).filter(p => (parseFloat(p.value) || 0) > 0);
+  if (filtered.length === 0) {
+    if (legendEl) legendEl.innerHTML = '';
+    return;
+  }
+
+  const total = filtered.reduce((s, p) => s + (parseFloat(p.value) || 0), 0);
+  const labels = filtered.map(p => p.name);
+  const data = filtered.map(p => parseFloat(p.value) || 0);
+  const colors = filtered.map((_, i) => PORTFOLIO_COLORS[i % PORTFOLIO_COLORS.length]);
+  const defaults = getChartDefaults();
+
+  state.charts.portfolioDonut = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: colors,
+        borderWidth: 2,
+        borderColor: defaults.bgCard || '#ffffff',
+        hoverOffset: 6,
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      cutout: '62%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(0,0,0,0.8)',
+          titleFont: { family: 'Inter' },
+          bodyFont: { family: 'Inter' },
+          padding: 12,
+          cornerRadius: 8,
+          callbacks: {
+            label: ctx => {
+              const pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
+              return `${ctx.label}: ${currency(ctx.parsed)} (${pct}%)`;
+            },
+          },
+        },
+      },
+    },
+  });
+
+  // Legend
+  if (legendEl) {
+    legendEl.innerHTML = filtered.map((p, i) => {
+      const val = parseFloat(p.value) || 0;
+      const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0.0';
+      return `<div class="portfolio-legend-item">
+        <span class="portfolio-legend-dot" style="background:${colors[i]}"></span>
+        <span class="portfolio-legend-name">${p.name}</span>
+        <span class="portfolio-legend-value">${currency(val)}</span>
+        <span class="portfolio-legend-pct">${pct}%</span>
+      </div>`;
+    }).join('');
+  }
+}
+
+// ==========================================
 //  CLOUD SYNC — GitHub Gist Backup/Restore
 // ==========================================
 const GIST_DESCRIPTION = 'Finance Tracker — Cloud Backup';
@@ -2981,6 +3241,7 @@ async function cloudBackup() {
     budgetLimits: state.budgetLimits,
     goals: getGoals(),
     recurrences: getRecurrences(),
+    portfolios: getPortfolios(),
     exportDate: new Date().toISOString(),
   };
 
@@ -3052,6 +3313,7 @@ async function cloudRestore() {
     if (data.columns) state.columns = data.columns;
     if (data.accountColumns) state.accountColumns = data.accountColumns;
     if (data.investments) state.investments = data.investments;
+    if (data.portfolios) localStorage.setItem(PORTFOLIO_KEY, JSON.stringify(data.portfolios));
     if (data.budgetLimits) state.budgetLimits = data.budgetLimits;
     if (data.goals) saveGoals(data.goals);
     if (data.recurrences) saveRecurrences(data.recurrences);
@@ -3664,6 +3926,7 @@ function initImportExport() {
       columnsData: state.columns,
       accountColumnsData: state.accountColumns,
       investments: state.investments,
+      portfolios: getPortfolios(),
       budgetLimits: state.budgetLimits,
       exportDate: new Date().toISOString(),
     }, null, 2)], { type: 'application/json' });
@@ -3714,6 +3977,7 @@ function importFile(file) {
       if (data.columnsData && Array.isArray(data.columnsData)) state.columns = data.columnsData;
       if (data.accountColumnsData && Array.isArray(data.accountColumnsData)) state.accountColumns = data.accountColumnsData;
       if (data.investments && typeof data.investments === 'object') state.investments = data.investments;
+      if (data.portfolios) localStorage.setItem(PORTFOLIO_KEY, JSON.stringify(data.portfolios));
       if (data.budgetLimits && typeof data.budgetLimits === 'object') state.budgetLimits = data.budgetLimits;
       saveData();
       renderDashboard();

@@ -1322,6 +1322,118 @@ body {
 }
 
 /* ==========================================
+   PORTFOLIO — Tab + Table + Donut
+   ========================================== */
+.portfolio-tabs-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.portfolio-tabs {
+  display: flex;
+  gap: 4px;
+}
+.portfolio-tab {
+  padding: 8px 18px;
+  font-size: 13.5px;
+  font-weight: 600;
+  font-family: inherit;
+  border: var(--glass-border);
+  border-radius: var(--radius-md);
+  background: var(--bg-tertiary);
+  backdrop-filter: blur(6px);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  position: relative;
+}
+.portfolio-tab:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+.portfolio-tab.active {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(56, 189, 248, 0.12));
+  color: var(--accent);
+  border-color: rgba(14, 165, 233, 0.3);
+  box-shadow: 0 0 12px rgba(14, 165, 233, 0.1);
+}
+.portfolio-add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  border: 2px dashed var(--text-tertiary);
+  background: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+.portfolio-add-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-light);
+}
+
+.portfolio-content {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+.portfolio-table-wrap {
+  flex: 1;
+  min-width: 0;
+}
+.portfolio-donut-wrap {
+  flex: 0 0 320px;
+}
+.portfolio-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 12.5px;
+}
+.portfolio-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.portfolio-legend-name {
+  flex: 1;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+.portfolio-legend-value {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+.portfolio-legend-pct {
+  color: var(--text-tertiary);
+  font-size: 11.5px;
+  min-width: 40px;
+  text-align: right;
+}
+
+@media (max-width: 900px) {
+  .portfolio-content {
+    flex-direction: column;
+  }
+  .portfolio-donut-wrap {
+    flex: none;
+    width: 100%;
+  }
+}
+
+/* ==========================================
    SPECIAL COMPONENTS
    ========================================== */
 
