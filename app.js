@@ -3015,7 +3015,20 @@ function renderPortfolio() {
 
   const esc = (s) => (s || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
-  tbody.innerHTML = positions.map((p, i) => {
+  // Collect unique tag values across ALL portfolios for datalists
+  const allPositions = Object.values(portfolios).flatMap(pf => pf.positions || []);
+  const tagSuggestions = {
+    type: [...new Set(allPositions.map(p => (p.type || '').trim()).filter(Boolean))].sort(),
+    region: [...new Set(allPositions.map(p => (p.region || '').trim()).filter(Boolean))].sort(),
+    sector: [...new Set(allPositions.map(p => (p.sector || '').trim()).filter(Boolean))].sort(),
+  };
+
+  // Build datalists HTML
+  const datalistsHTML = ['type', 'region', 'sector'].map(field =>
+    `<datalist id="pf-dl-${field}">${tagSuggestions[field].map(v => `<option value="${esc(v)}">`).join('')}</datalist>`
+  ).join('');
+
+  tbody.innerHTML = datalistsHTML + positions.map((p, i) => {
     const val = parseFloat(p.value) || 0;
     const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0.0';
     return `<tr>
@@ -3025,13 +3038,13 @@ function renderPortfolio() {
           style="background:none; border:none; color:var(--text-primary); font-family:inherit; font-size:13px; font-weight:500; width:100%; outline:none; padding:2px 0;">
       </td>
       <td style="text-align:left;">
-        <input type="text" value="${esc(p.type || '')}" class="pf-tag-input" data-idx="${i}" data-field="type" placeholder="ETF, Action…">
+        <input type="text" value="${esc(p.type || '')}" class="pf-tag-input" data-idx="${i}" data-field="type" list="pf-dl-type" placeholder="ETF, Action…">
       </td>
       <td style="text-align:left;">
-        <input type="text" value="${esc(p.region || '')}" class="pf-tag-input" data-idx="${i}" data-field="region" placeholder="US, EU, World…">
+        <input type="text" value="${esc(p.region || '')}" class="pf-tag-input" data-idx="${i}" data-field="region" list="pf-dl-region" placeholder="US, EU, World…">
       </td>
       <td style="text-align:left;">
-        <input type="text" value="${esc(p.sector || '')}" class="pf-tag-input" data-idx="${i}" data-field="sector" placeholder="Tech, Santé…">
+        <input type="text" value="${esc(p.sector || '')}" class="pf-tag-input" data-idx="${i}" data-field="sector" list="pf-dl-sector" placeholder="Tech, Santé…">
       </td>
       <td>
         <input type="number" value="${val}" class="pf-value-input" data-idx="${i}" step="0.01" min="0"
