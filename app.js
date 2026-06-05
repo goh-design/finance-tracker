@@ -2893,6 +2893,8 @@ function setActivePortfolioId(id) {
   localStorage.setItem(PORTFOLIO_ACTIVE_KEY, id);
 }
 
+let portfolioViewMode = 'name';
+
 function initPortfolio() {
   const addBtn = document.getElementById('addPortfolioBtn');
   const addPosBtn = document.getElementById('addPositionBtn');
@@ -2915,7 +2917,7 @@ function initPortfolio() {
     if (!activeId) { showToast('Créez un portefeuille d\'abord', 'error'); return; }
     const portfolios = getPortfolios();
     if (!portfolios[activeId]) return;
-    portfolios[activeId].positions.push({ name: 'Nouvelle position', value: 0 });
+    portfolios[activeId].positions.push({ name: 'Nouvelle position', value: 0, type: '', region: '', sector: '' });
     savePortfolios(portfolios);
     renderPortfolio();
   };
@@ -2942,6 +2944,23 @@ function initPortfolio() {
     setActivePortfolioId(remaining.length > 0 ? remaining[0] : '');
     renderPortfolio();
   };
+
+  // View mode buttons
+  const modesContainer = document.getElementById('portfolioViewModes');
+  if (modesContainer) {
+    modesContainer.querySelectorAll('.chart-btn').forEach(btn => {
+      btn.onclick = () => {
+        portfolioViewMode = btn.dataset.mode;
+        modesContainer.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const activeId = getActivePortfolioId();
+        const portfolios = getPortfolios();
+        if (activeId && portfolios[activeId]) {
+          renderPortfolioDonut(portfolios[activeId].positions);
+        }
+      };
+    });
+  }
 
   renderPortfolio();
 }
@@ -2978,7 +2997,7 @@ function renderPortfolio() {
   if (!tbody) return;
 
   if (!activeId || !portfolios[activeId]) {
-    tbody.innerHTML = '<tr><td colspan="5" class="placeholder-text">Ajoutez un portefeuille avec le bouton <b>+</b></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="placeholder-text">Ajoutez un portefeuille avec le bouton <b>+</b></td></tr>';
     if (tfoot) tfoot.style.display = 'none';
     renderPortfolioDonut([]);
     return;
@@ -2988,11 +3007,13 @@ function renderPortfolio() {
   const total = positions.reduce((s, p) => s + (parseFloat(p.value) || 0), 0);
 
   if (positions.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="placeholder-text">Cliquez <b>Ajouter</b> pour créer une position</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="placeholder-text">Cliquez <b>Ajouter</b> pour créer une position</td></tr>';
     if (tfoot) tfoot.style.display = 'none';
     renderPortfolioDonut([]);
     return;
   }
+
+  const esc = (s) => (s || '').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
   tbody.innerHTML = positions.map((p, i) => {
     const val = parseFloat(p.value) || 0;
@@ -3000,8 +3021,17 @@ function renderPortfolio() {
     return `<tr>
       <td style="text-align:left; color:var(--text-tertiary);">${i + 1}</td>
       <td style="text-align:left;">
-        <input type="text" value="${p.name}" class="pf-name-input" data-idx="${i}"
+        <input type="text" value="${esc(p.name)}" class="pf-name-input" data-idx="${i}"
           style="background:none; border:none; color:var(--text-primary); font-family:inherit; font-size:13px; font-weight:500; width:100%; outline:none; padding:2px 0;">
+      </td>
+      <td style="text-align:left;">
+        <input type="text" value="${esc(p.type || '')}" class="pf-tag-input" data-idx="${i}" data-field="type" placeholder="ETF, Action…">
+      </td>
+      <td style="text-align:left;">
+        <input type="text" value="${esc(p.region || '')}" class="pf-tag-input" data-idx="${i}" data-field="region" placeholder="US, EU, World…">
+      </td>
+      <td style="text-align:left;">
+        <input type="text" value="${esc(p.sector || '')}" class="pf-tag-input" data-idx="${i}" data-field="sector" placeholder="Tech, Santé…">
       </td>
       <td>
         <input type="number" value="${val}" class="pf-value-input" data-idx="${i}" step="0.01" min="0"
@@ -3024,6 +3054,21 @@ function renderPortfolio() {
       const pfs = getPortfolios();
       if (pfs[activeId] && pfs[activeId].positions[idx]) {
         pfs[activeId].positions[idx].name = input.value.trim() || 'Sans nom';
+        savePortfolios(pfs);
+        renderPortfolioDonut(pfs[activeId].positions);
+      }
+    };
+    input.onkeydown = e => { if (e.key === 'Enter') input.blur(); };
+  });
+
+  // Editable tag inputs (type, region, sector)
+  tbody.querySelectorAll('.pf-tag-input').forEach(input => {
+    input.onblur = () => {
+      const idx = parseInt(input.dataset.idx);
+      const field = input.dataset.field;
+      const pfs = getPortfolios();
+      if (pfs[activeId] && pfs[activeId].positions[idx]) {
+        pfs[activeId].positions[idx][field] = input.value.trim();
         savePortfolios(pfs);
         renderPortfolioDonut(pfs[activeId].positions);
       }
@@ -3075,10 +3120,24 @@ function renderPortfolioDonut(positions) {
     return;
   }
 
-  const total = filtered.reduce((s, p) => s + (parseFloat(p.value) || 0), 0);
-  const labels = filtered.map(p => p.name);
-  const data = filtered.map(p => parseFloat(p.value) || 0);
-  const colors = filtered.map((_, i) => PORTFOLIO_COLORS[i % PORTFOLIO_COLORS.length]);
+  // Group by current view mode
+  let grouped;
+  if (portfolioViewMode === 'name') {
+    grouped = filtered.map(p => ({ label: p.name, value: parseFloat(p.value) || 0 }));
+  } else {
+    const map = {};
+    filtered.forEach(p => {
+      const key = (p[portfolioViewMode] || '').trim() || 'Non défini';
+      map[key] = (map[key] || 0) + (parseFloat(p.value) || 0);
+    });
+    grouped = Object.entries(map).map(([label, value]) => ({ label, value }));
+    grouped.sort((a, b) => b.value - a.value);
+  }
+
+  const total = grouped.reduce((s, g) => s + g.value, 0);
+  const labels = grouped.map(g => g.label);
+  const data = grouped.map(g => g.value);
+  const colors = grouped.map((_, i) => PORTFOLIO_COLORS[i % PORTFOLIO_COLORS.length]);
   const defaults = getChartDefaults();
 
   state.charts.portfolioDonut = new Chart(ctx, {
@@ -3118,13 +3177,12 @@ function renderPortfolioDonut(positions) {
 
   // Legend
   if (legendEl) {
-    legendEl.innerHTML = filtered.map((p, i) => {
-      const val = parseFloat(p.value) || 0;
-      const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0.0';
+    legendEl.innerHTML = grouped.map((g, i) => {
+      const pct = total > 0 ? ((g.value / total) * 100).toFixed(1) : '0.0';
       return `<div class="portfolio-legend-item">
         <span class="portfolio-legend-dot" style="background:${colors[i]}"></span>
-        <span class="portfolio-legend-name">${p.name}</span>
-        <span class="portfolio-legend-value">${currency(val)}</span>
+        <span class="portfolio-legend-name">${g.label}</span>
+        <span class="portfolio-legend-value">${currency(g.value)}</span>
         <span class="portfolio-legend-pct">${pct}%</span>
       </div>`;
     }).join('');
