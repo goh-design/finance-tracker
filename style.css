@@ -1322,8 +1322,81 @@ body {
 }
 
 /* ==========================================
-   PORTFOLIO — Tab + Table + Donut
+   PORTFOLIO — Premium Glass Design
    ========================================== */
+
+/* ---- Hero Stat Cards ---- */
+.pf-hero {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.pf-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: var(--bg-card);
+  backdrop-filter: var(--glass-blur);
+  border: var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+.pf-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.pf-stat-card.pf-stat-total {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(56, 189, 248, 0.06));
+  border-color: rgba(14, 165, 233, 0.25);
+}
+.pf-stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  background: var(--accent-light);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.pf-stat-total .pf-stat-icon {
+  background: linear-gradient(135deg, var(--accent), #38bdf8);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+.pf-stat-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.pf-stat-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.pf-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.pf-stat-top {
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- Tabs Bar ---- */
 .portfolio-tabs-bar {
   display: flex;
   align-items: center;
@@ -1334,32 +1407,33 @@ body {
 }
 .portfolio-tabs {
   display: flex;
-  gap: 4px;
+  gap: 6px;
 }
 .portfolio-tab {
-  padding: 8px 18px;
-  font-size: 13.5px;
+  padding: 9px 20px;
+  font-size: 13px;
   font-weight: 600;
   font-family: inherit;
   border: var(--glass-border);
-  border-radius: var(--radius-md);
+  border-radius: 100px;
   background: var(--bg-tertiary);
   backdrop-filter: blur(6px);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all 200ms ease;
   white-space: nowrap;
   position: relative;
 }
 .portfolio-tab:hover {
   background: var(--bg-hover);
   color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
 }
 .portfolio-tab.active {
-  background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(56, 189, 248, 0.12));
-  color: var(--accent);
-  border-color: rgba(14, 165, 233, 0.3);
-  box-shadow: 0 0 12px rgba(14, 165, 233, 0.1);
+  background: linear-gradient(135deg, var(--accent), #38bdf8);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.3);
 }
 .portfolio-add-btn {
   display: flex;
@@ -1367,20 +1441,37 @@ body {
   justify-content: center;
   width: 36px;
   height: 36px;
-  border-radius: var(--radius-md);
+  border-radius: 100px;
   border: 2px dashed var(--text-tertiary);
   background: none;
   color: var(--text-tertiary);
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all 200ms ease;
   flex-shrink: 0;
 }
 .portfolio-add-btn:hover {
   border-color: var(--accent);
   color: var(--accent);
   background: var(--accent-light);
+  border-style: solid;
+  transform: rotate(90deg);
 }
 
+/* ---- Toolbar ---- */
+.pf-toolbar {
+  gap: 6px !important;
+}
+.btn-icon-only {
+  width: 34px !important;
+  height: 34px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md) !important;
+}
+
+/* ---- Content Layout ---- */
 .portfolio-content {
   display: flex;
   gap: 20px;
@@ -1391,57 +1482,133 @@ body {
   min-width: 0;
 }
 .portfolio-donut-wrap {
-  flex: 0 0 320px;
+  flex: 0 0 340px;
+}
+
+/* ---- Donut Card ---- */
+.pf-donut-card {
+  position: relative;
+  overflow: visible;
+}
+.pf-donut-container {
+  position: relative;
+  width: 240px;
+  height: 240px;
+  margin: 8px auto 0;
+}
+.pf-donut-center-label {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.pf-dcl-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.pf-dcl-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- View Mode Selector ---- */
+.portfolio-view-modes {
+  display: flex;
+  gap: 0;
+  margin-bottom: 12px;
+  background: var(--bg-tertiary);
+  border-radius: 100px;
+  padding: 3px;
+  border: var(--glass-border);
+}
+.pf-mode-btn {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  font-family: inherit;
+  border: none;
+  border-radius: 100px;
+  background: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  transition: all 200ms ease;
+  white-space: nowrap;
+}
+.pf-mode-btn:hover {
+  color: var(--text-primary);
+}
+.pf-mode-btn.active {
+  background: var(--bg-card);
+  color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---- Legend ---- */
+.pf-legend {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 .portfolio-legend-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 0;
-  font-size: 12.5px;
+  gap: 10px;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  transition: background 150ms ease;
+}
+.portfolio-legend-item:hover {
+  background: var(--bg-tertiary);
 }
 .portfolio-legend-dot {
   width: 10px;
   height: 10px;
   border-radius: 50%;
   flex-shrink: 0;
+  box-shadow: 0 0 6px currentColor;
 }
 .portfolio-legend-name {
   flex: 1;
   color: var(--text-secondary);
   font-weight: 500;
+  font-size: 12.5px;
 }
 .portfolio-legend-value {
   font-weight: 600;
   color: var(--text-primary);
   font-variant-numeric: tabular-nums;
+  font-size: 12.5px;
 }
 .portfolio-legend-pct {
   color: var(--text-tertiary);
   font-size: 11.5px;
   min-width: 40px;
   text-align: right;
+  font-weight: 500;
 }
 
-@media (max-width: 900px) {
-  .portfolio-content {
-    flex-direction: column;
-  }
-  .portfolio-donut-wrap {
-    flex: none;
-    width: 100%;
-  }
-}
-
-/* Portfolio tag inputs */
+/* ---- Tag Inputs ---- */
 .pf-tag-input {
   background: var(--bg-tertiary);
-  border: 1px solid var(--divider);
-  border-radius: 6px;
+  border: 1px solid transparent;
+  border-radius: 100px;
   color: var(--text-primary);
   font-family: inherit;
   font-size: 11.5px;
-  padding: 3px 8px;
+  padding: 4px 10px;
   width: 100px;
   outline: none;
   transition: all var(--transition-fast);
@@ -1454,15 +1621,26 @@ body {
 .pf-tag-input::placeholder {
   color: var(--text-tertiary);
   font-style: italic;
+  font-size: 10.5px;
 }
 
-/* View mode selector */
-.portfolio-view-modes {
-  display: flex;
-  gap: 4px;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
+/* ---- Responsive ---- */
+@media (max-width: 1100px) {
+  .portfolio-content {
+    flex-direction: column;
+  }
+  .portfolio-donut-wrap {
+    flex: none;
+    width: 100%;
+  }
 }
+@media (max-width: 768px) {
+  .pf-hero {
+    grid-template-columns: 1fr;
+  }
+  .pf-stat-value { font-size: 17px; }
+}
+
 
 /* ==========================================
    SPECIAL COMPONENTS

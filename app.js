@@ -2948,10 +2948,10 @@ function initPortfolio() {
   // View mode buttons
   const modesContainer = document.getElementById('portfolioViewModes');
   if (modesContainer) {
-    modesContainer.querySelectorAll('.chart-btn').forEach(btn => {
+    modesContainer.querySelectorAll('.pf-mode-btn').forEach(btn => {
       btn.onclick = () => {
         portfolioViewMode = btn.dataset.mode;
-        modesContainer.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
+        modesContainer.querySelectorAll('.pf-mode-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         const activeId = getActivePortfolioId();
         const portfolios = getPortfolios();
@@ -3059,6 +3059,17 @@ function renderPortfolio() {
 
   if (tfoot) tfoot.style.display = '';
   if (totalEl) totalEl.textContent = currency(total);
+
+  // Update hero stats
+  const pfStatTotal = document.getElementById('pfStatTotal');
+  const pfStatCount = document.getElementById('pfStatCount');
+  const pfStatTop = document.getElementById('pfStatTop');
+  if (pfStatTotal) pfStatTotal.textContent = currency(total);
+  if (pfStatCount) pfStatCount.textContent = positions.length;
+  if (pfStatTop) {
+    const top = positions.reduce((a, b) => (parseFloat(b.value) || 0) > (parseFloat(a.value) || 0) ? b : a, positions[0]);
+    pfStatTop.textContent = top ? top.name : '—';
+  }
 
   // Editable name inputs
   tbody.querySelectorAll('.pf-name-input').forEach(input => {
@@ -3187,6 +3198,10 @@ function renderPortfolioDonut(positions) {
       },
     },
   });
+
+  // Update center label
+  const centerVal = document.getElementById('pfDonutCenterValue');
+  if (centerVal) centerVal.textContent = currency(total);
 
   // Legend
   if (legendEl) {

@@ -805,6 +805,31 @@
         <h1 style="display:flex; align-items:center; gap:8px;"><i data-lucide="briefcase" style="width: 24px; height: 24px;"></i> Portefeuille</h1>
       </div>
 
+      <!-- Portfolio Summary Stats -->
+      <div class="pf-hero" id="pfHero">
+        <div class="pf-stat-card pf-stat-total">
+          <div class="pf-stat-icon"><i data-lucide="wallet" style="width:20px;height:20px;"></i></div>
+          <div class="pf-stat-body">
+            <span class="pf-stat-label">Valeur totale</span>
+            <span class="pf-stat-value" id="pfStatTotal">0,00 €</span>
+          </div>
+        </div>
+        <div class="pf-stat-card">
+          <div class="pf-stat-icon"><i data-lucide="layers" style="width:20px;height:20px;"></i></div>
+          <div class="pf-stat-body">
+            <span class="pf-stat-label">Positions</span>
+            <span class="pf-stat-value" id="pfStatCount">0</span>
+          </div>
+        </div>
+        <div class="pf-stat-card">
+          <div class="pf-stat-icon"><i data-lucide="crown" style="width:20px;height:20px;"></i></div>
+          <div class="pf-stat-body">
+            <span class="pf-stat-label">Top position</span>
+            <span class="pf-stat-value pf-stat-top" id="pfStatTop">—</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Portfolio Tabs -->
       <div class="portfolio-tabs-bar">
         <div class="portfolio-tabs" id="portfolioTabs">
@@ -824,14 +849,14 @@
                 <i data-lucide="list" style="width:18px; height:18px;"></i>
                 <span>Positions</span>
               </h2>
-              <div class="view-actions">
+              <div class="view-actions pf-toolbar">
                 <button class="btn btn-primary" id="addPositionBtn" style="display:flex; align-items:center; gap:6px;">
                   <i data-lucide="plus" style="width:14px; height:14px;"></i> Ajouter
                 </button>
-                <button class="btn btn-secondary" id="renamePortfolioBtn" style="display:flex; align-items:center; gap:6px;">
-                  <i data-lucide="edit-3" style="width:14px; height:14px;"></i> Renommer
+                <button class="btn btn-secondary btn-icon-only" id="renamePortfolioBtn" title="Renommer">
+                  <i data-lucide="edit-3" style="width:14px; height:14px;"></i>
                 </button>
-                <button class="btn btn-danger" id="deletePortfolioBtn" style="display:flex; align-items:center; gap:6px;">
+                <button class="btn btn-danger btn-icon-only" id="deletePortfolioBtn" title="Supprimer le portefeuille">
                   <i data-lucide="trash-2" style="width:14px; height:14px;"></i>
                 </button>
               </div>
@@ -869,22 +894,26 @@
         </div>
 
         <div class="portfolio-donut-wrap">
-          <div class="card section-card">
+          <div class="card section-card pf-donut-card">
             <div class="section-header">
               <h2 style="display:flex; align-items:center; gap:6px;">
                 <i data-lucide="pie-chart" style="width:18px; height:18px;"></i> Allocation
               </h2>
             </div>
             <div class="portfolio-view-modes" id="portfolioViewModes">
-              <button class="chart-btn active" data-mode="name">Par nom</button>
-              <button class="chart-btn" data-mode="type">Par type</button>
-              <button class="chart-btn" data-mode="region">Par région</button>
-              <button class="chart-btn" data-mode="sector">Par secteur</button>
+              <button class="pf-mode-btn active" data-mode="name">Nom</button>
+              <button class="pf-mode-btn" data-mode="type">Type</button>
+              <button class="pf-mode-btn" data-mode="region">Région</button>
+              <button class="pf-mode-btn" data-mode="sector">Secteur</button>
             </div>
-            <div class="chart-container small" style="max-width:280px; margin:0 auto;">
+            <div class="pf-donut-container">
               <canvas id="portfolioDonutChart"></canvas>
+              <div class="pf-donut-center-label" id="pfDonutCenterLabel">
+                <span class="pf-dcl-title">Total</span>
+                <span class="pf-dcl-value" id="pfDonutCenterValue">—</span>
+              </div>
             </div>
-            <div id="portfolioDonutLegend" style="margin-top:12px;"></div>
+            <div id="portfolioDonutLegend" class="pf-legend"></div>
           </div>
         </div>
       </div>
