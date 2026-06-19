@@ -2076,14 +2076,20 @@ function runPatrimonyEstimation() {
   const lastEntry = accountHistory[n - 1];
   const baseDate = isValidDate(lastEntry.date) ? new Date(lastEntry.date) : new Date();
 
+  const monthlyReturn = Math.pow(1 + annualGrowthRate / 100, 1 / 12) - 1;
+
   for (let m = 0; m <= projMonths; m++) {
     const futureDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + m, 1);
     const monthNames = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
     const label = `${monthNames[futureDate.getMonth()]} ${String(futureDate.getFullYear()).slice(2)}`;
     projectedLabels.push(label);
 
+    let predicted = currentPatrimony;
+    for (let i = 0; i < m; i++) {
+      predicted = predicted * (1 + monthlyReturn) + avgMonthlySavings;
+    }
+
     const daysAhead = m * 30.44;
-    const predicted = currentPatrimony + slopePerDay * daysAhead;
     const uncertainty = residualStd * Math.sqrt(1 + daysAhead / totalDaysSpan) * 1.5;
 
     projectedTrend.push(Math.round(predicted));
