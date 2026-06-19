@@ -553,6 +553,28 @@
         <div class="patrimony-milestones" id="patrimonyMilestones">
           <p class="placeholder-text">Lancez l'estimation pour voir vos objectifs patrimoniaux.</p>
         </div>
+
+        <!-- Table de détails -->
+        <div class="card section-card" id="patrimonyTableContainer" style="display:none; margin-top: 24px;">
+          <div class="section-header">
+            <h2 style="display:flex; align-items:center; gap:6px;"><i data-lucide="list" style="width: 20px; height: 20px;"></i> Détail des prévisions (mensuel)</h2>
+          </div>
+          <div class="table-wrapper scrollable" style="max-height: 400px;">
+            <table class="data-table compact" id="patrimonyDetailTable">
+              <thead>
+                <tr>
+                  <th>Mois</th>
+                  <th>Capital initial</th>
+                  <th>Épargne ajoutée</th>
+                  <th>Gains estimés</th>
+                  <th>Nouveau Capital</th>
+                </tr>
+              </thead>
+              <tbody id="patrimonyDetailBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </section>
 

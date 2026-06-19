@@ -2078,6 +2078,9 @@ function runPatrimonyEstimation() {
 
   const monthlyReturn = Math.pow(1 + annualGrowthRate / 100, 1 / 12) - 1;
 
+  const tableRows = [];
+  let runningCapital = currentPatrimony;
+
   for (let m = 0; m <= projMonths; m++) {
     const futureDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + m, 1);
     const monthNames = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
@@ -2089,6 +2092,31 @@ function runPatrimonyEstimation() {
       predicted = predicted * (1 + monthlyReturn) + avgMonthlySavings;
     }
 
+    if (m === 0) {
+      tableRows.push(`
+        <tr>
+          <td>${label} (Aujourd'hui)</td>
+          <td class="placeholder-text">-</td>
+          <td class="placeholder-text">-</td>
+          <td class="placeholder-text">-</td>
+          <td style="font-weight:600; color:var(--text-primary);">${currency(predicted)}</td>
+        </tr>
+      `);
+    } else {
+      const gains = runningCapital * monthlyReturn;
+      const newCap = runningCapital + gains + avgMonthlySavings;
+      tableRows.push(`
+        <tr>
+          <td>${label}</td>
+          <td>${currency(runningCapital)}</td>
+          <td style="color:var(--success)">+${currency(avgMonthlySavings)}</td>
+          <td style="color:var(--accent)">+${currency(gains)}</td>
+          <td style="font-weight:600; color:var(--text-primary);">${currency(newCap)}</td>
+        </tr>
+      `);
+      runningCapital = newCap;
+    }
+
     const daysAhead = m * 30.44;
     const uncertainty = residualStd * Math.sqrt(1 + daysAhead / totalDaysSpan) * 1.5;
 
@@ -2096,6 +2124,11 @@ function runPatrimonyEstimation() {
     projectedOptimistic.push(Math.round(predicted + uncertainty));
     projectedPessimistic.push(Math.max(0, Math.round(predicted - uncertainty)));
   }
+
+  const tbody = document.getElementById('patrimonyDetailBody');
+  if (tbody) tbody.innerHTML = tableRows.join('');
+  const tableContainer = document.getElementById('patrimonyTableContainer');
+  if (tableContainer) tableContainer.style.display = 'block';
 
   const est1Y = projectedTrend[Math.min(12, projectedTrend.length - 1)];
   const est5Y = projectedTrend[projectedTrend.length - 1];
