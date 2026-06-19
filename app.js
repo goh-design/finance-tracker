@@ -1621,7 +1621,8 @@ function renderAccountDistChart() {
         fill: isTotal,
         tension: 0.4,
         borderWidth: isTotal ? 2.5 : 1.5,
-        pointRadius: isTotal ? 3 : 2,
+        pointRadius: 0,
+        pointHoverRadius: isTotal ? 5 : 3,
         pointBackgroundColor: color
       };
     });
@@ -1855,10 +1856,10 @@ function runProjection() {
           borderColor: '#0ea5e9',
           backgroundColor: 'rgba(46,170,220,0.1)',
           fill: true,
-          tension: 0.3,
+          tension: 0.4,
           borderWidth: 3,
-          pointRadius: 2,
-          pointHoverRadius: 6,
+          pointRadius: 0,
+          pointHoverRadius: 5,
         },
         {
           label: 'Contributions',
@@ -2128,11 +2129,11 @@ function renderPatrimonyChart(histLabels, histData, projLabels, projTrend, projO
           backgroundColor: 'rgba(46,170,220,0.08)',
           fill: true,
           borderWidth: 3,
-          pointRadius: 4,
-          pointBackgroundColor: '#0ea5e9',
+          pointRadius: 0,
+          pointHoverRadius: 5,
           pointBorderColor: '#fff',
           pointBorderWidth: 2,
-          tension: 0.3,
+          tension: 0.4,
           spanGaps: false,
         },
         {
