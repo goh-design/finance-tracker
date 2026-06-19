@@ -2031,11 +2031,21 @@ function runPatrimonyEstimation() {
   const denom = n * sumX2 - sumX * sumX;
   const slopePerDay = denom !== 0 ? (n * sumXY - sumX * sumY) / denom : 0;
 
-  // ─── Epargne Mensuelle Réelle ───
-  // Moyenne sur tous les mois suivis (y compris les mois à 0) pour ne pas fausser le taux
-  const validMonthsCount = Math.max(1, state.weeklyData.length);
-  const totalSavingsAllTime = state.weeklyData.reduce((s, d) => s + (parseFloat(d.epargne) || 0), 0);
-  const avgMonthlySavings = totalSavingsAllTime / validMonthsCount;
+  // ─── Epargne Mensuelle (Médiane) ───
+  // Utilisation de la médiane pour ignorer les gros versements exceptionnels et refléter l'effort d'épargne "typique"
+  const epargneValues = state.weeklyData
+    .map(d => parseFloat(d.epargne) || 0)
+    .sort((a, b) => a - b);
+  
+  let avgMonthlySavings = 0;
+  if (epargneValues.length > 0) {
+    const mid = Math.floor(epargneValues.length / 2);
+    if (epargneValues.length % 2 === 0) {
+      avgMonthlySavings = (epargneValues[mid - 1] + epargneValues[mid]) / 2;
+    } else {
+      avgMonthlySavings = epargneValues[mid];
+    }
+  }
 
   // ─── Growth metrics ───
   const startPatrimony = accountHistory[0].total;
