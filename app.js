@@ -1576,7 +1576,7 @@ function showAddAccountModal() {
     .map(col => ({ name: col.id, label: col.label, type: col.type }));
 
   showModal('Ajouter une entrée de compte', fields, (data) => {
-    const newEntry = { id: crypto.randomUUID() };
+    const newEntry = { id: crypto.randomUUID(), date: new Date().toISOString().split('T')[0] };
     
     state.accountColumns.forEach(col => {
       if (col.id !== 'total' && col.id !== 'variation') {
@@ -1982,14 +1982,35 @@ function runPatrimonyEstimation() {
     return !isNaN(d.getTime());
   }
 
-  const allDatesValid = accountHistory.every(d => isValidDate(d.date));
+  function parseSemaineToDate(semaineStr) {
+    if (!semaineStr) return null;
+    const match = String(semaineStr).match(/(\d+)(?:[-/\s]+(\d{4}))?/);
+    if (!match) return null;
+    const w = parseInt(match[1]);
+    const y = match[2] ? parseInt(match[2]) : new Date().getFullYear();
+    const d = new Date(y, 0, 1);
+    d.setDate(d.getDate() + (w - 1) * 7);
+    return d;
+  }
 
   let daysFromStart;
   let totalDaysSpan;
 
-  if (allDatesValid) {
-    const firstDate = new Date(accountHistory[0].date);
-    daysFromStart = accountHistory.map(d => (new Date(d.date) - firstDate) / (1000 * 60 * 60 * 24));
+  const cleanedData = accountHistory.map(d => {
+    let parsedDate = null;
+    if (isValidDate(d.date)) {
+      parsedDate = new Date(d.date);
+    } else {
+      parsedDate = parseSemaineToDate(d.semaine);
+    }
+    return { ...d, parsedDate };
+  });
+
+  const validDatesCount = cleanedData.filter(d => d.parsedDate).length;
+
+  if (validDatesCount === n) {
+    const firstDate = cleanedData[0].parsedDate;
+    daysFromStart = cleanedData.map(d => (d.parsedDate - firstDate) / (1000 * 60 * 60 * 24));
     totalDaysSpan = daysFromStart[n - 1];
   } else {
     daysFromStart = accountHistory.map((_, i) => i * 7);
@@ -2010,16 +2031,29 @@ function runPatrimonyEstimation() {
   const denom = n * sumX2 - sumX * sumX;
   const slopePerDay = denom !== 0 ? (n * sumXY - sumX * sumY) / denom : 0;
 
-  // ─── Growth metrics (simple & intuitive) ───
+  // ─── Epargne Mensuelle Réelle ───
+  // Moyenne sur tous les mois suivis (y compris les mois à 0) pour ne pas fausser le taux
+  const validMonthsCount = Math.max(1, state.weeklyData.length);
+  const totalSavingsAllTime = state.weeklyData.reduce((s, d) => s + (parseFloat(d.epargne) || 0), 0);
+  const avgMonthlySavings = totalSavingsAllTime / validMonthsCount;
+
+  // ─── Growth metrics ───
   const startPatrimony = accountHistory[0].total;
   const totalChange = currentPatrimony - startPatrimony;
   const monthsElapsed = totalDaysSpan / 30.44;
   const avgMonthlyGrowth = monthsElapsed > 0 ? totalChange / monthsElapsed : 0;
 
-  // CAGR = (end/start)^(365/days) - 1
+  // Rendement Annuel Réel (Dietz modifié approximatif)
+  // On soustrait l'apport (épargne) de la croissance pour obtenir le vrai rendement du capital
+  const totalSavingsInPeriod = avgMonthlySavings * monthsElapsed;
+  const netInvestmentGains = totalChange - totalSavingsInPeriod;
+  const averageCapitalInvested = startPatrimony + (totalSavingsInPeriod / 2);
+
   let annualGrowthRate = 0;
-  if (startPatrimony > 0 && totalDaysSpan > 0) {
-    annualGrowthRate = (Math.pow(currentPatrimony / startPatrimony, 365.25 / totalDaysSpan) - 1) * 100;
+  if (averageCapitalInvested > 0 && totalDaysSpan > 0) {
+    const periodReturn = netInvestmentGains / averageCapitalInvested;
+    // Annualisation du rendement
+    annualGrowthRate = (Math.pow(1 + periodReturn, 365.25 / totalDaysSpan) - 1) * 100;
   }
 
   const intercept = (sumY - slopePerDay * sumX) / n;
@@ -2029,11 +2063,6 @@ function runPatrimonyEstimation() {
     sumResiduals2 += (accountHistory[i].total - predicted) ** 2;
   }
   const residualStd = n > 2 ? Math.sqrt(sumResiduals2 / (n - 2)) : 0;
-
-  const savingsData = state.weeklyData.filter(d => d.epargne && parseFloat(d.epargne) > 0);
-  const avgMonthlySavings = savingsData.length > 0
-    ? savingsData.reduce((s, d) => s + (parseFloat(d.epargne) || 0), 0) / savingsData.length
-    : 0;
 
   const projMonths = 60;
   const historicalLabels = accountHistory.map(d => d.label);
